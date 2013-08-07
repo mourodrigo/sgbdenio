@@ -11,14 +11,15 @@
 #include <fstream>
 #include <ostream>
 #include <vector>
+#include <sstream>
+#include <utility>
 
 using namespace std;
 
-#define debug true;
 #define dbpath "database.data"
 #define separator "&&##**"
 
-class Database{
+class Database{ //classe do tipo database
 	private:
 		int id;
 		string name;
@@ -48,16 +49,77 @@ class Database{
 		}
 };
 
-bool fileExists(const char *filename)
-{
+#pragma mark - stringManagement
+
+
+vector<string> explode( const string& s, const string& delimiter ){ //explode
+  vector<string> result;
+  string::size_type from = 0;
+  string::size_type to = 0;
+
+  while ( to != string::npos ){
+    to = s.find( delimiter, from );
+    if ( from < s.size() && from != to ){
+      result.push_back( s.substr( from, to - from ) );
+    }
+    from = to + delimiter.size();
+  }
+  return result;
+}
+
+bool ToBool( const std::string & s ) { //converte string para bool
+   return s.at(0) == '1';
+}
+
+#pragma mark - filemanager
+
+bool fileExists(const char *filename){ //verifica se arquivo existe
   ifstream ifile(filename);
   return ifile;
+}
+
+#pragma mark -sgbd
+
+vector <Database> getAllDatabase(){
+	vector <Database> dbs;
+	if(fileExists(dbpath)){
+
+		cout << "Arquivo de banco de dados ja existe fazendo leitura";
+		string line;
+		ifstream file (dbpath);
+		if (file.is_open()){
+		    while ( file.good() ){
+		    	getline (file,line);
+		    	//cout << "line" << line << endl;
+
+			    vector <string> databaseline;
+			    databaseline = explode(line, separator);
+
+			    int id = 0;
+			    string name = "aaaa";         //aqui eu nao consegui atribuir o valor do vetor databaseline[x] que veio do explode para cada um dos tipos para acessar a posição use databaseline.at(x)
+			    string dir = "dir";
+			    bool defaultDb = false;
+
+//		   cout << databaseline.at(1).c_str() <<endl;
+			    Database dbReaded(0,name,dir,defaultDb);
+			    dbs.push_back(dbReaded);
+
+		    }
+		    file.close();
+		    return dbs;
+		}else{
+		   cout << "Erro ao abrir arquivo do banco de dados";
+		   return dbs;
+		 }
+
+	}
+return dbs;
 }
 
 bool createDatabase(Database newdb){
 
 	int dbid = 0;
-	//if(newdb.getId()==NULL){ //tratar NULL
+	//if(newdb.getId()==NULL){ //tratar NULL não existe em c++ ? o.O
 		dbid = newdb.getId();
 	//}
 
@@ -70,9 +132,20 @@ bool createDatabase(Database newdb){
 	}
 
 	if(fileExists(dbpath)){
-		cout << "Arquivo ja existe";
+		vector <Database> dbs;
+		dbs = getAllDatabase();
+
+		//se arquivo ja existe busca todos os dbs para inserir no lugar certo...
+		//assim que corrigido o problema no getalldatabase continuar aqui
+
+		cout << "dbs size: " << dbs.size() << endl;
+		for (int x = 0; x<dbs.size(); x++){
+				cout << "id: " << dbs.at(x).getId() << "name: "<< dbs.at(x).getName()  << " dir: "<< dbs.at(x).getDir() << " default: " << dbs.at(x).getDefault() << endl;
+			}
+
+		return true;
 	}else{
-		cout << "Criando primeiro banco de dados";
+		cout << "Criando primeiro banco de dados"; //inserção no arquivo esta ok
 		ofstream file;
 		file.open(dbpath);
 		file << 0 << separator << newdb.getName() << separator << newdb.getDir()  << separator << 1 << "\n";
@@ -80,20 +153,7 @@ bool createDatabase(Database newdb){
 		return true;
 	}
 
-/*
 
-	ifstream file;
-	 string line;
-
-	  file.open ("db.data");
-	  getline (file,line);
-	  cout << line;
-	  //filstring << myfile;
-	 // myfile << newdb.getName();
-	  //myfile << filstring << newdb.getName();
-	  file.close();
-*/
-	return false;
 }
 
 
@@ -104,7 +164,7 @@ int main() {
 
 
 	Database dbmouro(0,"sgbdMouro","/Users/rodrigo/Desktop",true);
-	cout << "resultado ao criar o banco " << createDatabase(dbmouro);
+	createDatabase(dbmouro);
 
 	//ABAIXO COMENTARIOS PARA NAO ESQUECER A SINTAXE DAS COISAS
 
