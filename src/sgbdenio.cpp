@@ -80,7 +80,7 @@ bool fileExists(const char *filename){ //verifica se arquivo existe
 
 #pragma mark -sgbd
 
-vector <Database> getAllDatabase(){
+vector<Database> getAllDatabase(){
 	vector <Database> dbs;
 	if(fileExists(dbpath)){
 
@@ -92,20 +92,30 @@ vector <Database> getAllDatabase(){
 		    	getline (file,line);
 		    	//cout << "line" << line << endl;
 
-			    vector <string> databaseline;
-			    databaseline = explode(line, separator);
+			    if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
+                       vector <string> databaseline;
+			           databaseline = explode(line, separator);
 
-			    int id = 0;
-			    string name = "aaaa";         //aqui eu nao consegui atribuir o valor do vetor databaseline[x] que veio do explode para cada um dos tipos para acessar a posição use databaseline.at(x)
-			    string dir = "dir";
-			    bool defaultDb = false;
-
-//		   cout << databaseline.at(1).c_str() <<endl;
-			    Database dbReaded(0,name,dir,defaultDb);
-			    dbs.push_back(dbReaded);
-
+			           int id = atoi(databaseline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
+			           string name = databaseline.at(1);//
+			           string dir = databaseline.at(2);//
+			           bool defaultDb;
+			           if(databaseline.at(3)=="1"){//ATRIBUI O VALOR BOLEANO ATRAV…S DE UM IF
+                          //cout << "DEFAULTDB EH UM"<< endl;
+                          defaultDb = true; 
+                          } else {
+			              //cout << "DEFAULTDB NAO EH UM"<< endl;
+			              defaultDb = false; 
+                          }
+		        
+			           
+                       //cout << databaseline.at(1).c_str() <<endl;
+			           Database dbReaded(0,name,dir,defaultDb);
+			           dbs.push_back(dbReaded);
+              }
 		    }
 		    file.close();
+		    //cout << dbs.at(0).getId() << " | " << dbs.at(0).getName() << " | " << dbs.at(0).getDir() << " | " << dbs.at(0).getDefault() ;
 		    return dbs;
 		}else{
 		   cout << "Erro ao abrir arquivo do banco de dados";
@@ -133,12 +143,13 @@ bool createDatabase(Database newdb){
 
 	if(fileExists(dbpath)){
 		vector <Database> dbs;
-		dbs = getAllDatabase();
-
+		cout << endl << "Teste" ;
+        dbs = getAllDatabase();
+        
 		//se arquivo ja existe busca todos os dbs para inserir no lugar certo...
 		//assim que corrigido o problema no getalldatabase continuar aqui
 
-		cout << "dbs size: " << dbs.size() << endl;
+		//cout << "dbs size: " << dbs.size() << endl;
 		for (int x = 0; x<dbs.size(); x++){
 				cout << "id: " << dbs.at(x).getId() << "name: "<< dbs.at(x).getName()  << " dir: "<< dbs.at(x).getDir() << " default: " << dbs.at(x).getDefault() << endl;
 			}
@@ -221,7 +232,7 @@ createDatabase(db3);
 
 //	cout << "database name: " << db1.getName() << "dir: " << db1.getDir() << endl;
 
-
+    system("pause");
 	return 0;
 
 }
