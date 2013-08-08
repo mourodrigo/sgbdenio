@@ -6,6 +6,7 @@
 // Description : Hello World in C++, Ansi-style
 //============================================================================
 
+#include <stdlib.h>
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -13,7 +14,7 @@
 #include <vector>
 #include <sstream>
 #include <utility>
-#include <sys/dir.h>
+//#include <sys/dir.h>
 #include <dirent.h>
 #include <limits.h>
 #include <unistd.h>
@@ -129,7 +130,8 @@ vector<Database> getAllDatabase(){
 		        if(line != "\0"){//SE A LINHA FOR VAZIA ENTÃO NÃO FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
                        vector <string> databaseline;
 			           databaseline = explode(line, separator);
-			           int id = atoi(databaseline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
+			           int id;
+			           id = atoi(databaseline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
 			           string name = databaseline.at(1);//
 			           string dir;
 			           if(databaseline.at(2)!=""){
@@ -222,7 +224,7 @@ int main() {
 
 
 
-	Database dbmouro(6666,"novodois","",true);
+	Database dbmouro(6666,"teste","",true);
 	createDatabase(dbmouro);
 
 	//ABAIXO COMENTARIOS PARA NAO ESQUECER A SINTAXE DAS COISAS
@@ -280,7 +282,7 @@ createDatabase(db3);
 
 //	cout << "database name: " << db1.getName() << "dir: " << db1.getDir() << endl;
 
-//    system("pause");
+   system("pause");
 	return 0;
 
 }
