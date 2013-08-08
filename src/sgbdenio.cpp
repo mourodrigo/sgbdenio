@@ -13,11 +13,15 @@
 #include <vector>
 #include <sstream>
 #include <utility>
+#include <sys/dir.h>
+#include <dirent.h>
+#include <limits.h>
+#include <unistd.h>
 
 using namespace std;
 
 #define dbpath "database.data"
-#define separator "&&##**"
+#define separator "|>#<|"
 
 class Database{ //classe do tipo database
 	private:
@@ -38,6 +42,18 @@ class Database{ //classe do tipo database
 		}
 		bool getDefault(){
 			return this->defaultDb;
+		}
+		void setId(int newId){
+			this->id = newId;
+		}
+		void setName(string newName){
+			this->name = newName;
+		}
+		void setDir(string newDir){
+			this->dir = newDir;
+		}
+		void setDefault(bool newDefault){
+			this->defaultDb = newDefault;
 		}
 
 
@@ -71,6 +87,27 @@ bool ToBool( const std::string & s ) { //converte string para bool
    return s.at(0) == '1';
 }
 
+bool stringIsBool(string stringbool){
+	if(stringbool=="1"){
+	  return  true;
+	} else {
+	  return false;
+	}
+}
+
+string getCurrentPath(){
+	char *cwd;
+	string str;
+	stringstream ss;
+	        if ((cwd = getcwd(NULL, 64)) == NULL) {
+	        	return str;
+	        }else{
+	        	ss << cwd;
+	        	ss >> str;
+	        	return str;
+	        }
+}
+
 #pragma mark - filemanager
 
 bool fileExists(const char *filename){ //verifica se arquivo existe
@@ -83,45 +120,39 @@ bool fileExists(const char *filename){ //verifica se arquivo existe
 vector<Database> getAllDatabase(){
 	vector <Database> dbs;
 	if(fileExists(dbpath)){
-
 		cout << "Arquivo de banco de dados ja existe fazendo leitura";
 		string line;
 		ifstream file (dbpath);
 		if (file.is_open()){
-		    while ( file.good() ){
+			    while ( file.good() ){
 		    	getline (file,line);
-		    	//cout << "line" << line << endl;
-
-			    if(line != "\0"){//SE A LINHA FOR VAZIA ENTÃO NÃO FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
+		        if(line != "\0"){//SE A LINHA FOR VAZIA ENTÃO NÃO FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
                        vector <string> databaseline;
 			           databaseline = explode(line, separator);
-
 			           int id = atoi(databaseline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
 			           string name = databaseline.at(1);//
-			           string dir = databaseline.at(2);//
-			           bool defaultDb;
-			           if(databaseline.at(3)=="1"){//ATRIBUI O VALOR BOLEANO ATRAVÉS DE UM IF
-                          //cout << "DEFAULTDB EH UM"<< endl;
-                          defaultDb = true; 
-                          } else {
-			              //cout << "DEFAULTDB NAO EH UM"<< endl;
-			              defaultDb = false; 
-                          }
-		        
-			           
-                       //cout << databaseline.at(1).c_str() <<endl;
-			           Database dbReaded(0,name,dir,defaultDb);
-			           dbs.push_back(dbReaded);
-              }
+			           string dir;
+			           if(databaseline.at(2)!=""){
+			        	   dir = databaseline.at(2);//
+			           }else{
+			        	   dir = getCurrentPath()+"/"+databaseline.at(1);
+			           }
+		 			   bool defaultDb = stringIsBool(databaseline.at(3));
+		 			   Database dbReaded(id,name,dir,defaultDb);
+		 			   dbs.push_back(dbReaded);
+		        }
 		    }
-		    file.close();
-		    //cout << dbs.at(0).getId() << " | " << dbs.at(0).getName() << " | " << dbs.at(0).getDir() << " | " << dbs.at(0).getDefault() ;
-		    return dbs;
+
+		 file.close();
+
+		return dbs;
 		}else{
 		   cout << "Erro ao abrir arquivo do banco de dados";
 		   return dbs;
-		 }
+		}
 
+	}else{
+		cout << "arquivo nao existe";
 	}
 return dbs;
 }
@@ -129,32 +160,49 @@ return dbs;
 bool createDatabase(Database newdb){
 
 	int dbid = 0;
-	//if(newdb.getId()==NULL){ //tratar NULL n‹o existe em c++ ? o.O
 		dbid = newdb.getId();
-	//}
 
 	if(newdb.getName().length() == 0){
 		return false;
 	}
 
-	if(newdb.getDir().length() == 0){
-		return false;
-	}
 
 	if(fileExists(dbpath)){
 		vector <Database> dbs;
-		cout << endl << "Teste" ;
-        dbs = getAllDatabase();
-        
-		//se arquivo ja existe busca todos os dbs para inserir no lugar certo...
-		//assim que corrigido o problema no getalldatabase continuar aqui
+	    dbs = getAllDatabase();
+        int indexIdNewDatabase = dbs.size()+1;
 
-		//cout << "dbs size: " << dbs.size() << endl;
-		for (int x = 0; x<dbs.size(); x++){
-				cout << "id: " << dbs.at(x).getId() << "name: "<< dbs.at(x).getName()  << " dir: "<< dbs.at(x).getDir() << " default: " << dbs.at(x).getDefault() << endl;
+        if(newdb.getDefault()){
+            for (int x = 0; x<dbs.size(); x++){
+            	if(dbs.at(x).getDefault()){
+            		dbs.at(x).setDefault(0);
+            	}
+            }
+
+         }
+
+
+    	if(newdb.getDir().length() == 0){
+    		newdb.setDir(getCurrentPath()+newdb.getName());
+    	}
+
+        newdb.setId(indexIdNewDatabase);
+        dbs.push_back(newdb);
+
+        ofstream file;
+
+        file.open(dbpath);
+
+        for (int x = 0; x<dbs.size(); x++){
+    		file << dbs.at(x).getId() << separator << dbs.at(x).getName() << separator << dbs.at(x).getDir()  << separator << dbs.at(x).getDefault() << "\n";
 			}
 
-		return true;
+        file.close();
+
+        cout << getCurrentPath();
+
+
+        return true;
 	}else{
 		cout << "Criando primeiro banco de dados"; //inser‹o no arquivo esta ok
 		ofstream file;
@@ -174,7 +222,7 @@ int main() {
 
 
 
-	Database dbmouro(0,"sgbdMouro","/Users/rodrigo/Desktop",true);
+	Database dbmouro(6666,"novodois","",true);
 	createDatabase(dbmouro);
 
 	//ABAIXO COMENTARIOS PARA NAO ESQUECER A SINTAXE DAS COISAS
@@ -232,7 +280,7 @@ createDatabase(db3);
 
 //	cout << "database name: " << db1.getName() << "dir: " << db1.getDir() << endl;
 
-    system("pause");
+//    system("pause");
 	return 0;
 
 }
