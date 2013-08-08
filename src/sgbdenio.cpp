@@ -31,6 +31,9 @@ using namespace std;
 
 #define dbpath "database.data"
 #define separator "|>#<|"
+#define log 1
+
+
 
 
 class Database{ //classe do tipo database
@@ -135,7 +138,7 @@ bool fileExists(const char *filename){ //verifica se arquivo existe
 vector<Database> getAllDatabase(){
 	vector <Database> dbs;
 	if(fileExists(dbpath)){
-		cout << "Arquivo de banco de dados ja existe fazendo leitura";
+		//cout << "Arquivo de banco de dados ja existe fazendo leitura";
 		string line;
 		ifstream file (dbpath);
 		if (file.is_open()){
@@ -198,9 +201,9 @@ bool createDatabase(Database newdb){
         
         
     	if(newdb.getDir().length() == 0){
-    		newdb.setDir(getCurrentPath()+newdb.getName());
+    		newdb.setDir(getCurrentPath()+"/"+newdb.getName());
     	}else{
-            newdb.setDir(newdb.getDir()+newdb.getName());
+            newdb.setDir(newdb.getDir()+"/"+newdb.getName());
         }
         
         newdb.setId(indexIdNewDatabase);
@@ -217,31 +220,84 @@ bool createDatabase(Database newdb){
         file.close();
         
         string strPath = newdb.getDir();
-        MKDIR(strPath.c_str());
         
+        cout << "\n\n\n a criar " << strPath << endl;
+        
+        MKDIR(strPath.c_str());
+
+        if(log){cout << "Bando de dados " << newdb.getName() << " com id 0 no diretorio: \n " << newdb.getDir() << "\n  default 1 " << endl;} //inserção no arquivo esta ok
+
         
         return true;
 	}else{
-		cout << "Criando primeiro banco de dados"; //inserção no arquivo esta ok
 		ofstream file;
 		file.open(dbpath);
+        if(newdb.getDir().length() == 0){
+    		newdb.setDir(getCurrentPath()+"/"+newdb.getName());
+    	}else{
+            newdb.setDir(newdb.getDir()+"/"+newdb.getName());
+        }
+        MKDIR(newdb.getDir().c_str());
 		file << 0 << separator << newdb.getName() << separator << newdb.getDir()  << separator << 1 << "\n";
 		file.close();
+        
+        if(log){cout << "Bando de dados " << newdb.getName() << " com id 0 no diretorio: \n " << newdb.getDir() << "\n  default 1 " << endl;} //inserção no arquivo esta ok
+		
+        
 		return true;
 	}
-    
-    
 }
 
+Database getDefaultDb(){
+        if(fileExists(dbpath)){
+            vector <Database> dbs;
+            dbs = getAllDatabase();
+                for (int x = 0; x<dbs.size(); x++){
+                    if(dbs.at(x).getDefault()){
+                        return dbs.at(x);
+                    }
+                }
+        }
+    return  Database(-1, "", "", false); //nao consigo retornar null
+}
 
+#pragma globals
+
+//extern Database defaultDb;  //variavel global? aqui nao funcionou
 
 
 int main() {
     
+
     
+    /*  //CRIANDO ALGUNS DATABASES
     
-	Database dbmouro(6666,"sgbdenio","/Users/Desenvolvimento/Documents/bancodedados",true);
+    Database dbmouro2(6666,"mouro1","",false);
+	createDatabase(dbmouro2);
+
+    
+	Database dbmouro(6666,"sgbdeniooo","",true);
 	createDatabase(dbmouro);
+    
+    
+    Database dbmouro3(6666,"mouro2","/Users/Desenvolvimento/Desktop",true);
+	createDatabase(dbmouro3);
+    
+    Database dbmouro4(6666,"moueo3","/Users/Desenvolvimento/Desktop",false);
+	createDatabase(dbmouro4);
+    
+    */
+    
+    
+    
+    
+    //SETANDO DATABASE DEFAULT
+    
+    Database defaultDb = getDefaultDb(); //declarando defaultdb aqui pois nao consegui declarar com global ainda
+    
+    cout << "db default: \n" << defaultDb.getId() << " - " << defaultDb.getName() << " - " << defaultDb.getDir();
+    
+    
     
 	//ABAIXO COMENTARIOS PARA NAO ESQUECER A SINTAXE DAS COISAS
     
