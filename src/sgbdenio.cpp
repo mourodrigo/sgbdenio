@@ -26,8 +26,11 @@
 #include <sys/stat.h>
 #define MKDIR(a) mkdir(a, 0777)  /*Aqui o 0777 define o modo como igual ao umask, ou seja as permissões que resultariam de um mkdir na shell */
 #endif
+
 using namespace std;
 
+#define tsdefault getCurrentPath() + "/ts_default"
+#define tspath "tablespace.data"
 #define dbpath "database.data"
 #define separator "|>#<|"
 #define log 1
@@ -39,7 +42,8 @@ class Database{ //classe do tipo database
 private:
     int id;
     string name;
-    string dir;
+    //string dir;
+    int tsID;
     bool defaultDb;
 
 public:
@@ -49,8 +53,11 @@ public:
     string getName(){
         return this->name;
     }
-    string getDir(){
-        return this->dir;
+    //string getDir(){
+    //    return this->dir;
+    //}
+    int getTablespace(){
+        return this->tsID;
     }
     bool getDefault(){
         return this->defaultDb;
@@ -61,22 +68,24 @@ public:
     void setName(string newName){
         this->name = newName;
     }
-    void setDir(string newDir){
-        this->dir = newDir;
+    //void setDir(string newDir){
+    //    this->dir = newDir;
+    //}
+    void setTablespace(int newTsID){
+        this->tsID = newTsID;
     }
     void setDefault(bool newDefault){
         this->defaultDb = newDefault;
     }
 
 
-    Database(int newId, string newName, string newDir, bool newDefaultDb){
+    Database(int newId, string newName, int newTsID, bool newDefaultDb){
         this->id = newId;
         this->name = newName;
-        this->dir = newDir;
+        this->tsID = newTsID;
         this->defaultDb = newDefaultDb;
     }
 };
-
 
 class Attribute{
 private:
@@ -130,7 +139,38 @@ public:
     }
 };
 
+class Tablespace{
+private:
+    int id;
+    string name;
+    string location;
 
+public:
+    int getID(){
+        return this->id;
+    }
+    string getName(){
+        return this->name;
+    }
+    string getLocation(){
+        return this->location;
+    }
+    void setID(int newId){
+        this->id = newId;
+    }
+    void setName(string newName){
+        this->name = newName;
+    }
+    void setLocation(string newLocation){
+        this->location = newLocation;
+    }
+
+    Tablespace(int newId,string newName, string newLocation){
+        this->id = newId;
+        this->name = newName;
+        this->location = newLocation;
+    }
+};
 #pragma mark - stringManagement
 
 
@@ -187,6 +227,40 @@ bool fileExists(const char *filename){ //verifica se arquivo existe
 }
 
 #pragma mark -sgbd
+Tablespace checkTablespace(int idTS){
+
+        //cout << "Arquivo encontrado." << endl;
+        string line;
+        ifstream file (tspath);
+		if (file.is_open()){
+            while ( file.good() ){
+		    	getline (file,line);
+		        if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
+                    vector <string> tsline;
+                    tsline = explode(line, separator);
+                    int id;
+                    id = atoi(tsline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
+                    if(idTS == id){
+                    string name = tsline.at(1);//
+                    string location = tsline.at(2);
+                    Tablespace tsReaded(id,name,location);
+                    file.close();
+                    return tsReaded;
+                   }
+		        }
+		    }
+		    Tablespace tsReaded(-1,"","");
+            file.close();
+            return tsReaded;
+    }else{
+        cout << "Arquivo não encontrado." << endl;
+        Tablespace tsReaded(-1,"","");
+        return tsReaded;
+    }
+
+
+
+}
 
 vector<Database> getAllDatabase(){
 	vector <Database> dbs;
@@ -203,14 +277,9 @@ vector<Database> getAllDatabase(){
                     int id;
                     id = atoi(databaseline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
                     string name = databaseline.at(1);//
-                    string dir;
-                    if(databaseline.at(2)!=""){
-                        dir = databaseline.at(2);//
-                    }else{
-                        dir = getCurrentPath()+"/"+databaseline.at(1);
-                    }
+                    int tsID = atoi(databaseline.at(2).c_str());
                     bool defaultDb = stringIsBool(databaseline.at(3));
-                    Database dbReaded(id,name,dir,defaultDb);
+                    Database dbReaded(id,name,tsID,defaultDb);
                     dbs.push_back(dbReaded);
 		        }
 		    }
@@ -231,13 +300,14 @@ vector<Database> getAllDatabase(){
 
 bool createDatabase(Database newdb){
 
-	int dbid = 0;
-    dbid = newdb.getId();
+	//int dbid = 0;
+    //dbid = newdb.getId();
 
 	if(newdb.getName().length() == 0){
 		return false;
 	}
-
+	string location;
+    int result;
 
 	if(fileExists(dbpath)){
 		vector <Database> dbs;
@@ -253,10 +323,23 @@ bool createDatabase(Database newdb){
         }
 
 
-    	if(newdb.getDir().length() == 0){
-    		newdb.setDir(getCurrentPath()+"/"+newdb.getName());
-    	}else{
-            newdb.setDir(newdb.getDir()+"/"+newdb.getName());
+    	if(newdb.getTablespace() == 0){
+    		location = tsdefault + "/" + newdb.getName();
+    		result = MKDIR(location.c_str());
+    		if (result == -1)
+                return false;
+           	}else{
+            Tablespace tsReturn = checkTablespace(newdb.getTablespace());;
+            if(tsReturn.getID() != -1){
+                cout << "Tablespace encontrada" << endl;
+                location = tsReturn.getLocation()+"/"+newdb.getName();
+                result = MKDIR(location.c_str());
+    		if (result == -1)
+                return false;
+            }else{
+                cout << "Tablespace nao encontrada" << endl;
+                return false;
+            }
         }
 
         newdb.setId(indexIdNewDatabase);
@@ -267,34 +350,47 @@ bool createDatabase(Database newdb){
         file.open(dbpath);
 
         for (int x = 0; x<dbs.size(); x++){
-    		file << dbs.at(x).getId() << separator << dbs.at(x).getName() << separator << dbs.at(x).getDir()  << separator << dbs.at(x).getDefault() << "\n";
+    		file << dbs.at(x).getId() << separator << dbs.at(x).getName() << separator << dbs.at(x).getTablespace()  << separator << dbs.at(x).getDefault() << "\n";
         }
 
         file.close();
 
-        string strPath = newdb.getDir();
+  /*      string strPath = newdb.getDir();
 
         cout << "\n\n\n a criar " << strPath << endl;
 
         MKDIR(strPath.c_str());
 
         if(log){cout << "Bando de dados " << newdb.getName() << " com id 0 no diretorio: \n " << newdb.getDir() << "\n  default 1 " << endl;} //inserção no arquivo esta ok
-
+*/
 
         return true;
 	}else{
-		ofstream file;
+	    ofstream file;
 		file.open(dbpath);
-        if(newdb.getDir().length() == 0){
-    		newdb.setDir(getCurrentPath()+"/"+newdb.getName());
-    	}else{
-            newdb.setDir(newdb.getDir()+"/"+newdb.getName());
+        if(newdb.getTablespace() == 0){
+    		location = tsdefault + "/" + newdb.getName();
+    		result = MKDIR(location.c_str());
+    		if (result == -1)
+                return false;
+           	}else{
+            Tablespace tsReturn = checkTablespace(newdb.getTablespace());;
+            if(tsReturn.getID() != -1){
+                cout << "Tablespace encontrada" << endl;
+                location = tsReturn.getLocation()+"/"+newdb.getName();
+                result = MKDIR(location.c_str());
+    		if (result == -1)
+                return false;
+            }else{
+                cout << "Tablespace nao encontrada" << endl;
+                return false;
+            }
         }
-        MKDIR(newdb.getDir().c_str());
-		file << 0 << separator << newdb.getName() << separator << newdb.getDir()  << separator << 1 << "\n";
+
+		file << 0 << separator << newdb.getName() << separator << newdb.getTablespace()  << separator << 1 << "\n";
 		file.close();
 
-        if(log){cout << "Bando de dados " << newdb.getName() << " com id 0 no diretorio: \n " << newdb.getDir() << "\n  default 1 " << endl;} //inserção no arquivo esta ok
+        if(log){cout << "Banco de dados " << newdb.getName() << " com id 0 no diretorio: \n " << newdb.getTablespace() << "\n  default 1 " << endl;} //inserção no arquivo esta ok
 
 
 		return true;
@@ -311,12 +407,107 @@ Database getDefaultDb(){
             }
         }
     }
-    return  Database(-1, "", "", false); //nao consigo retornar null
+    return  Database(-1, "", -1, false); //nao consigo retornar null
 }
+
+vector<Tablespace> getAllTableSpace(){
+	vector <Tablespace> tsData;
+	if(fileExists(tspath)){
+		//cout << "Arquivo de banco de dados ja existe fazendo leitura";
+		string line;
+		ifstream file (tspath);
+		if (file.is_open()){
+            while ( file.good() ){
+		    	getline (file,line);
+		        if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
+                    vector <string> tsline;
+                    tsline = explode(line, separator);
+                    int id;
+                    id = atoi(tsline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
+                    string name = tsline.at(1);//
+                    string location = tsline.at(2);
+
+                    Tablespace tsReaded(id,name,location);
+                    tsData.push_back(tsReaded);
+		        }
+		    }
+
+            file.close();
+            return tsData;
+		}else{
+            cout << "Erro ao abrir arquivo de metadados da tablespace";
+            return tsData;
+		}
+
+	}else{
+		cout << "arquivo nao existe";
+	}
+    return tsData;
+}
+
+bool createTableSpace(Tablespace newts){
+    int result;
+    ofstream file;
+    if (fileExists(tspath)){
+    cout << "Arquivo DATA da Tablespace existe" << endl;
+        vector <Tablespace> tsData;
+        tsData = getAllTableSpace();
+        cout <<"Tamanho do vetor TS de retorno: "<< tsData.size() << endl;
+        for (int i=0; i<tsData.size();i++){
+            if(newts.getName() == tsData.at(i).getName()){
+               //cout << "Tablespace já existe" << endl;
+                return false;
+               }
+        }
+        if(newts.getLocation().length() == 0){
+    		newts.setLocation(getCurrentPath()+"/"+"ts_"+newts.getName());
+    	}else{
+            newts.setLocation(newts.getLocation()+"/"+"ts_"+newts.getName());
+        }
+        newts.setID(tsData.size());
+        tsData.push_back(newts);
+
+        result = MKDIR(newts.getLocation().c_str());
+        if(result == 0){
+                file.open(tspath);
+
+                for (int x = 0; x<tsData.size(); x++){
+                    file << tsData.at(x).getID() << separator << tsData.at(x).getName() << separator << tsData.at(x).getLocation() << "\n";
+                }
+
+                file.close();
+                return true;
+        }else if(result == -1){
+            return false;
+        }
+
+    }else {
+        cout << "Arquivo DATA da TableSpace nao existe" << endl;
+        Tablespace tsdef(0,"default",getCurrentPath()+"/ts_default");
+        MKDIR(tsdef.getLocation().c_str());
+        file.open(tspath);
+        if(newts.getLocation().length() == 0){
+    		newts.setLocation(getCurrentPath()+"/"+"ts_"+newts.getName());
+    	}else{
+            newts.setLocation(newts.getLocation()+"/"+"ts_"+newts.getName());
+        }
+        result = MKDIR(newts.getLocation().c_str());
+		file << 0 << separator << tsdef.getName() << separator << tsdef.getLocation()  << "\n";
+		file << 1 << separator << newts.getName() << separator << newts.getLocation()  << "\n";
+		file.close();
+		if(result == 0){
+                 return true;
+        }else if(result == -1){
+            return false;
+        }
+    }
+
+}
+
 
 #pragma globals
 
-//extern Database defaultDb;  //variavel global? aqui nao funcionou
+Database defaultDb = getDefaultDb();  //variavel global? aqui nao funcionou
 
 
 int main() {
@@ -325,30 +516,37 @@ int main() {
 
       //CRIANDO ALGUNS DATABASES
 
-     Database dbmouro2(6666,"mouro1","",false);
+     Database dbmouro2(6666,"mouro1",0,false);
      createDatabase(dbmouro2);
 
 
-     Database dbmouro(6666,"sgbdeniooo","",true);
+     Database dbmouro(6666,"sgbdeniooo",0,true);
      createDatabase(dbmouro);
 
 
-     Database dbmouro3(6666,"mouro2","/Users/Desenvolvimento/Desktop",true);
+     Database dbmouro3(6666,"mouro2",2,true);
      createDatabase(dbmouro3);
 
-     Database dbmouro4(6666,"moueo3","/Users/Desenvolvimento/Desktop",false);
+     Database dbmouro4(6666,"andrey",1,true);
      createDatabase(dbmouro4);
 
+   /* bool result;
+    Tablespace newTS(0,"teste","");
+    result = createTableSpace(newTS);
+    Tablespace newTS2(0,"teste3","");
+    result = createTableSpace(newTS2);
+    Tablespace newTS3(0,"teste7","C:/Users/Andrey/Desktop");
+    result = createTableSpace(newTS3);*/
 
-
-
-
-
+    /*if(result)
+        cout << "Tablespace criada com sucesso" << endl;
+    else
+        cout << "Erro ao criar Tablespace" << endl;*/
     //SETANDO DATABASE DEFAULT
 
-    Database defaultDb = getDefaultDb(); //declarando defaultdb aqui pois nao consegui declarar com global ainda
+     //defaultDb = getDefaultDb(); //declarando defaultdb aqui pois nao consegui declarar com global ainda
 
-    cout << "db default: \n" << defaultDb.getId() << " - " << defaultDb.getName() << " - " << defaultDb.getDir();
+    cout << "db default: \n" << defaultDb.getId() << " - " << defaultDb.getName() << " - " << defaultDb.getTablespace();
 
 
 
