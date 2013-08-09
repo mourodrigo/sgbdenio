@@ -86,7 +86,6 @@ private:
     int size;
     string value;
     bool optional;
-    bool fk;
     
 public:
     string getName(){
@@ -124,19 +123,11 @@ public:
         this->optional = newOptional;
     }
     
-    bool getFk(){
-        return this->fk;
-    }
-    void setFk(bool fk){
-        this->fk = fk;
-    }
-    
-    Attribute(string newName, int newType, int newSize, string newValue, bool newOptional, bool fk){
+    Attribute(string newName, int newType, int newSize, string newValue, bool newOptional){
         this->name = newName;
         this->type = newType;
         this->value = newValue;
         this->optional = newOptional;
-        this->fk = fk;
     }
 };
 
