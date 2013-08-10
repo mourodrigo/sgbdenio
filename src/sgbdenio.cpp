@@ -35,6 +35,7 @@ using namespace std;
 #define columnsPath "columns.data"
 #define tablesPath "tables.data"
 #define pksPath "pks.data"
+#define fksPath "fks.data"
 
 #define separator "|>#<|"
 #define log 1
@@ -76,6 +77,29 @@ public:
         this->name = newName;
         this->table = newTable;
         this->order = newOrder;
+    }
+};
+
+class Foreing{
+private:
+    int id;
+    int fk;
+public:
+    int getId(){
+        return this->id;
+    }
+    void setId(int newId){
+        this->id = newId;
+    }
+    int getFk(){
+        return this->fk;
+    }
+    void setFk(int newFk){
+        this->fk = newFk;
+    }
+    Foreing(int newId, int newFk){
+        this->id = newId;
+        this->fk = newFk;
     }
 };
 
@@ -704,7 +728,7 @@ vector<Column> getAllColumns(int newTableId){
     return colDatas;
 }
 
-vector <Primary> getAllPrimary(){
+vector <Primary> getAllPrimary(int idPrimary){
     vector <Primary> primaryDatas;
 	if(fileExists(pksPath)){
 		//cout << "Arquivo de banco de dados ja existe fazendo leitura";
@@ -722,8 +746,19 @@ vector <Primary> getAllPrimary(){
                     string table = pkline.at(2);
                     int order = atoi(pkline.at(3).c_str());//CONVERTE STRING PARA INTEIRO
                     
-                    Primary primaryReaded(id,name,table,order);
-                    primaryDatas.push_back(primaryReaded);
+                    
+                    if (idPrimary==-1) {
+                        Primary primaryReaded(id,name,table,order);
+                        primaryDatas.push_back(primaryReaded);
+                    }else{
+                        if (idPrimary == id) {
+                            Primary primaryReaded(id,name,table,order);
+                            primaryDatas.push_back(primaryReaded);
+                            break;
+                        }
+                    }
+                    
+                    
 		        }
 		    }
             
@@ -804,7 +839,7 @@ bool createTable(Table newTable, vector<Column> columns){
                     
                     fileColumn.close();
                     vector <Primary> primaryReaded;
-                    primaryReaded = getAllPrimary();
+                    primaryReaded = getAllPrimary(-1);
                     int newPkId = primaryReaded.at(primaryReaded.size()-1).getId()+1;
                     int cont = 1;
                     for (int x = 0; x < columns.size(); x++) {
@@ -844,29 +879,86 @@ bool createTable(Table newTable, vector<Column> columns){
                     
                     ofstream filepks;
                     filepks.open(pksPath);
-                    int cont = 1;
+                    int contOrdem = 1;
                     for (int x = 0; x < columns.size(); x++) {
                         if(columns.at(x).getPk()){
-                            filepks << 0 << separator << columns.at(x).getName() << separator << newTable.getName() << separator << cont << "\n" ;
-                            cont++;
+                            filepks << 0 << separator << columns.at(x).getName() << separator << newTable.getName() << separator << contOrdem << "\n" ;
+                            contOrdem++;
                         }
                     }
                     filepks.close();
-                    
-                    
                     return true;
                 }
-                
-                
             }
         }
-    
-    
     if (log) { cout << "banco nao existe" << endl; }
     return false;
 }
 
+vector<Foreing> getAllFks(){
+    vector<Foreing> fks;
+    if (fileExists(fksPath)) {
+        string line;
+		ifstream file (fksPath);
+		if (file.is_open()){
+            while ( file.good() ){
+		    	getline (file,line);
+		        if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
+                    vector <string> pkline;
+                    pkline = explode(line, separator);
+                    
+                    int id = atoi(pkline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
+                    int fk = atoi(pkline.at(1).c_str());//CONVERTE STRING PARA INTEIRO
+                    
+                    Foreing newforeing(id, fk);
+                    fks.push_back(newforeing);
+                }
+		    }
+            
+            file.close();
+            return fks;
+        }else{
+            return fks;
+        }
+        return fks;
+    }
+return fks;
+}
 
+bool setForeingKey(Column col, int pk){
+    
+    cout << "aaaaaa";
+    
+    if (pk!=-1) {
+        vector<Primary> pks = getAllPrimary(pk);
+        if (pks.size()!=0){
+            if (pks.at(0).getId()==pk) {
+                if (fileExists(fksPath)) {
+                    vector<Foreing>fks = getAllFks();
+                    int newFkId = fks.at(fks.size()-1).getId()+1;
+                    Foreing newforeing(newFkId,pk);
+                    fks.push_back(newforeing);
+                    ofstream filefks;
+                    filefks.open(fksPath);
+                    for (int x = 0; x < fks.size(); x++) {
+                        filefks << fks.at(x).getId() << separator << fks.at(x).getFk() << "\n" ;
+                    }
+                    filefks.close();
+                    return true;
+                }else{
+                    ofstream filefks;
+                    filefks.open(fksPath);
+                    filefks << 0 << separator << pk << "\n" ;
+                    filefks.close();
+                    return true;
+                }
+            }
+        }else{
+            return false;
+        }
+    }
+    return false;
+}
 
 #pragma globals
 
@@ -897,9 +989,12 @@ int main() {
     createDatabase(db3);
 
     */
+  
+    Column idCliente(true, true, "idCliente", 0, 10, false, -1, 1);
     
     
-    
+    setForeingKey(idCliente, 0);
+    /*
     
     
     Table tabelacliente(0,"cliente", 1);
