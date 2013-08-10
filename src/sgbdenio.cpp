@@ -36,7 +36,38 @@ using namespace std;
 #define log 1
 
 
+class Table{
+private:
+    int id;
+    string name;
+    int dbId;
 
+public:
+    int getId(){
+        return this->id;
+    }
+    string getName(){
+        return this->name;
+    }
+    int getDatabase(){
+        return this->dbId;
+    }
+    void setId(int newId){
+        this->id = newId;
+    }
+    void setName(string newName){
+        this->name = newName;
+    }
+    void setDatabase(int newDb){
+        this_>dbId = newDb;
+    }
+
+    Table(int newId, string newName, int newDb){
+        this->id = newId;
+        thos->name = newName;
+        this->dbId = newDb;
+    }
+};
 
 class Database{ //classe do tipo database
 private:
