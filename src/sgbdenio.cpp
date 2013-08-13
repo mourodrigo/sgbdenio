@@ -108,7 +108,7 @@ private:
     int id;
     string name;
     int dbId;
-    
+
 public:
     int getId(){
         return this->id;
@@ -128,7 +128,7 @@ public:
     void setDatabase(int newDb){
         this->dbId = newDb;
     }
-    
+
     Table(int newId, string newName, int newDb){
         this->id = newId;
         this->name = newName;
@@ -142,7 +142,7 @@ private:
     string name;
     int tsID;
     bool defaultDb;
-    
+
 public:
     int getId(){
         return this->id;
@@ -168,8 +168,8 @@ public:
     void setDefault(bool newDefault){
         this->defaultDb = newDefault;
     }
-    
-    
+
+
     Database(int newId, string newName, int newTsID, bool newDefaultDb){
         this->id = newId;
         this->name = newName;
@@ -188,66 +188,66 @@ private:
     bool optional;
     int fk;
     int tableId;
-    
+
 public:
     bool getPk(){
         return this->pk;
     }
-    
+
     void setPk(bool newPk){
         this->pk = newPk;
     }
-    
+
     bool getSerial(){
         return this->serial;
     }
-    
+
     void setSerial(bool newSerial){
         this->serial = newSerial;
     }
-    
+
     string getName(){
         return this->name;
     }
     void setName(string newName){
         this->name = newName;
     }
-    
+
     int getType(){
         return this->type;
     }
     void setType(int newType){
         this->type = newType;
     }
-    
+
     int getSize(){
         return this->size;
     }
     void setSize(int newSize){
         this->size = newSize;
     }
-    
+
     bool getOptional(){
         return this->optional;
     }
     void setOptional(bool newOptional){
         this->optional = newOptional;
     }
-    
+
     int getFk(){
         return this->fk;
     }
     void setFk(int newFk){
         this->fk = newFk;
     }
-    
+
     int gettableId(){
         return this->tableId;
     }
     void settableId(int newTableId){
         this->tableId = newTableId;
     }
-    
+
     Column(bool newPk, bool newSerial, string newName, int newType, int newSize, bool newOptional, int newFk, int newTableId){
         this->pk = newPk;
         this->serial = newSerial;
@@ -258,7 +258,7 @@ public:
         this->fk = newFk;
         this->tableId = newTableId;
     }
-    
+
 };
 
 class Tablespace{
@@ -266,7 +266,7 @@ private:
     int id;
     string name;
     string location;
-    
+
 public:
     int getId(){
         return this->id;
@@ -286,7 +286,7 @@ public:
     void setLocation(string newLocation){
         this->location = newLocation;
     }
-    
+
     Tablespace(int newId,string newName, string newLocation){
         this->id = newId;
         this->name = newName;
@@ -300,7 +300,7 @@ vector<string> explode( const string& s, const string& delimiter ){ //explode
     vector<string> result;
     string::size_type from = 0;
     string::size_type to = 0;
-    
+
     while ( to != string::npos ){
         to = s.find( delimiter, from );
         if ( from < s.size() && from != to ){
@@ -345,12 +345,12 @@ bool fileExists(const char *filename){ //verifica se arquivo existe
     }else{
         return false;
     }
-    
+
 }
 
 #pragma mark -sgbd
 Tablespace checkTablespace(int idTS){
-    
+
     //cout << "Arquivo encontrado." << endl;
     string line;
     ifstream file (tspath);
@@ -379,9 +379,9 @@ Tablespace checkTablespace(int idTS){
         Tablespace tsReaded(-1,"","");
         return tsReaded;
     }
-    
-    
-    
+
+
+
 }
 
 vector<Database> getAllDatabase(){
@@ -405,15 +405,15 @@ vector<Database> getAllDatabase(){
                     dbs.push_back(dbReaded);
 		        }
 		    }
-            
+
             file.close();
-            
+
             return dbs;
 		}else{
             cout << "Erro ao abrir arquivo do banco de dados";
             return dbs;
 		}
-        
+
 	}else{
 		cout << "arquivo nao existe";
 	}
@@ -421,20 +421,20 @@ vector<Database> getAllDatabase(){
 }
 
 bool createDatabase(Database newdb){
-    
+
 	//int dbid = 0;
     //dbid = newdb.getId();
-    
+
 	if(newdb.getName().length() == 0){
 		return false;
 	}
 	string location;
     int result;
-    
+
 	if(fileExists(dbpath)){
 		vector <Database> dbs;
 	    dbs = getAllDatabase();
-     
+
         // int indexIdNewDatabase = dbs.size()+1;
         if(newdb.getDefault()){
             for (int x = 0; x<dbs.size(); x++){
@@ -442,10 +442,10 @@ bool createDatabase(Database newdb){
             		dbs.at(x).setDefault(0);
             	}
             }
-            
+
         }
-        
-        
+
+
     	if(newdb.getTablespace() == 0){
     		location = tsdefault + "/" + newdb.getName();
     		result = MKDIR(location.c_str());
@@ -464,31 +464,31 @@ bool createDatabase(Database newdb){
                 return false;
             }
         }
-        
-        
-        
+
+
+
         newdb.setId(dbs.at(dbs.size()-1).getId()+1);
         dbs.push_back(newdb);
-        
+
         ofstream file;
-        
+
         file.open(dbpath);
-        
+
         for (int x = 0; x<dbs.size(); x++){
     		file << dbs.at(x).getId() << separator << dbs.at(x).getName() << separator << dbs.at(x).getTablespace()  << separator << dbs.at(x).getDefault() << "\n";
         }
-        
+
         file.close();
-        
+
         /*      string strPath = newdb.getDir();
-         
+
          cout << "\n\n\n a criar " << strPath << endl;
-         
+
          MKDIR(strPath.c_str());
-         
+
          if(log){cout << "Bando de dados " << newdb.getName() << " com id 0 no diretorio: \n " << newdb.getDir() << "\n  default 1 " << endl;} //inserção no arquivo esta ok
          */
-        
+
         return true;
 	}else{
 	    ofstream file;
@@ -511,13 +511,13 @@ bool createDatabase(Database newdb){
                 return false;
             }
         }
-        
+
 		file << 0 << separator << newdb.getName() << separator << newdb.getTablespace()  << separator << 1 << "\n";
 		file.close();
-        
+
         if(log){cout << "Banco de dados " << newdb.getName() << " com id 0 no diretorio: \n " << newdb.getTablespace() << "\n  default 1 " << endl;} //inserção no arquivo esta ok
-        
-        
+
+
 		return true;
 	}
 }
@@ -551,19 +551,19 @@ vector<Tablespace> getAllTableSpace(){
                     id = atoi(tsline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
                     string name = tsline.at(1);//
                     string location = tsline.at(2);
-                    
+
                     Tablespace tsReaded(id,name,location);
                     tsData.push_back(tsReaded);
 		        }
 		    }
-            
+
             file.close();
             return tsData;
 		}else{
             cout << "Erro ao abrir arquivo de metadados da tablespace";
             return tsData;
 		}
-        
+
 	}else{
 		cout << "arquivo nao existe";
 	}
@@ -589,24 +589,24 @@ bool createTableSpace(Tablespace newts){
     	}else{
             newts.setLocation(newts.getLocation()+"/"+"ts_"+newts.getName());
         }
-        
+
         newts.setID(tsData.at(tsData.size()-1).getId()+1);
         tsData.push_back(newts);
-        
+
         result = MKDIR(newts.getLocation().c_str());
         if(result == 0){
             file.open(tspath);
-            
+
             for (int x = 0; x<tsData.size(); x++){
                 file << tsData.at(x).getId() << separator << tsData.at(x).getName() << separator << tsData.at(x).getLocation() << "\n";
             }
-            
+
             file.close();
             return true;
         }else if(result == -1){
             return false;
         }
-        
+
     }else {
         cout << "Arquivo DATA da TableSpace nao existe" << endl;
         Tablespace tsdef(0,"default",getCurrentPath()+"/ts_default");
@@ -632,7 +632,7 @@ bool createTableSpace(Tablespace newts){
 
 string getPathFromTableSpace(int idTs){
     vector <Tablespace> tbs = getAllTableSpace();
-    
+
     for (int x = 0; x < tbs.size(); x++) {
         if (tbs.at(x).getId()==idTs) {
             return tbs.at(x).getLocation();
@@ -653,23 +653,23 @@ vector<Table> getAllTables(){
 		        if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
                     vector <string> tsline;
                     tsline = explode(line, separator);
-                    
+
                     int id = atoi(tsline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
                     string name = tsline.at(1);//
                     int idDatabase = atoi(tsline.at(2).c_str());//CONVERTE STRING PARA INTEIRO
-                    
+
                     Table tableReaded(id,name,idDatabase);
                     tablesDatas.push_back(tableReaded);
 		        }
 		    }
-            
+
             file.close();
             return tablesDatas;
 		}else{
             cout << "Erro ao abrir arquivo de metadados da tablespace";
             return tablesDatas;
 		}
-        
+
 	}else{
 		cout << "arquivo nao existe";
 	}
@@ -688,7 +688,7 @@ vector<Column> getAllColumns(int newTableId){
 		        if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
                     vector <string> tsline;
                     tsline = explode(line, separator);
-                    
+
                     bool pk = atoi(tsline.at(0).c_str());
                     bool serial = stringIsBool(tsline.at(1));
                     string name = tsline.at(2);
@@ -697,9 +697,9 @@ vector<Column> getAllColumns(int newTableId){
                     bool optional = stringIsBool(tsline.at(5).c_str());
                     int fk = atoi(tsline.at(6).c_str());
                     int tableId = atoi(tsline.at(7).c_str());
-                    
+
     //                Column(bool newPk, bool newSerial, string newName, int newType, int newSize, bool newOptional, int newFk, int newTableId){
-                    
+
                     if (newTableId==-1) {
                         Column columnReaded(pk, serial, name, type, size, optional, fk, tableId);
                         colDatas.push_back(columnReaded);
@@ -710,21 +710,21 @@ vector<Column> getAllColumns(int newTableId){
                             break;
                         }
                     }
-                    
+
                 }
 		    }
-            
+
             file.close();
             return colDatas;
 		}else{
             cout << "Erro ao abrir arquivo de metadados da tablespace";
             return colDatas;
 		}
-        
+
 	}else{
 		cout << "arquivo nao existe";
 	}
-    
+
     return colDatas;
 }
 
@@ -740,13 +740,13 @@ vector <Primary> getAllPrimary(int idPrimary){
 		        if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
                     vector <string> pkline;
                     pkline = explode(line, separator);
-                    
+
                     int id = atoi(pkline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
                     string name = pkline.at(1);//
                     string table = pkline.at(2);
                     int order = atoi(pkline.at(3).c_str());//CONVERTE STRING PARA INTEIRO
-                    
-                    
+
+
                     if (idPrimary==-1) {
                         Primary primaryReaded(id,name,table,order);
                         primaryDatas.push_back(primaryReaded);
@@ -757,42 +757,42 @@ vector <Primary> getAllPrimary(int idPrimary){
                             break;
                         }
                     }
-                    
-                    
+
+
 		        }
 		    }
-            
+
             file.close();
             return primaryDatas;
 		}else{
             cout << "Erro ao abrir arquivo de metadados da tablespace";
             return primaryDatas;
 		}
-        
+
 	}else{
 		cout << "arquivo nao existe";
 	}
     return primaryDatas;
-    
+
 }
 
 bool createTable(Table newTable, vector<Column> columns){
     vector<Database> dbs;
     dbs = getAllDatabase();
-    
+
     if (newTable.getName().length()==0) {
         if (log) { cout << "Nome em branco" << endl; }
         return false;
     }
-    
+
         for (int x = 0; x<dbs.size(); x++) {
             if (dbs.at(x).getId()==newTable.getDatabase()) {
                 //if (log) {cout << "banco selecionado " << dbs.at(x).getName() << endl;}
-                
+
                 string tablespace = getPathFromTableSpace(dbs.at(x).getId())+"/";
-            
+
                 string newTablePath = tablespace+dbs.at(x).getName()+"/"+newTable.getName()+".data";
-                
+
                 if (fileExists(tablesPath)) {
                     //cout << getAllTables().at(0).getId() << " -- " << getAllTables().at(0).getName() << " -- " << getAllTables().at(0).getDatabase() << endl;
                     vector <Table> tableReturn;
@@ -803,9 +803,9 @@ bool createTable(Table newTable, vector<Column> columns){
                             cout << "Tabela ja existe" << endl;
                             return false;
                         }
-                        
+
                     }
-                    
+
                     newTable.setId(tableReturn.at(tableReturn.size()-1).getId()+1);//incrementa o id da nova tabela conforme o id atual + 1
                     tableReturn.push_back(newTable);
                     ofstream fileTables;
@@ -815,9 +815,9 @@ bool createTable(Table newTable, vector<Column> columns){
                     }
                     fileTables.close();
                     ofstream fileTable;
-                    fileTable.open(newTablePath);
+                    fileTable.open(newTablePath.c_str());
                     fileTable.close();
-                
+
                     vector <Column> columnsReaded = getAllColumns(-1);
                     for (int x = 0; x < columns.size(); x++) {
                         if (log) {
@@ -826,17 +826,17 @@ bool createTable(Table newTable, vector<Column> columns){
                         columns.at(x).settableId(newTable.getId());
                         columnsReaded.push_back(columns.at(x));
                     }
-                    
-                    
+
+
                     ofstream fileColumn;
                     fileColumn.open(columnsPath);
-                    
-                    
+
+
                     for (int x = 0; x < columnsReaded.size(); x++) {
                         fileColumn << columnsReaded.at(x).getPk() << separator << columnsReaded.at(x).getSerial() << separator << columnsReaded.at(x).getName() << separator << columnsReaded.at(x).getType() << separator << columnsReaded.at(x).getSize() << separator << columnsReaded.at(x).getOptional() << separator << columnsReaded.at(x).getFk() << separator << columnsReaded.at(x).gettableId() << "\n" ;
-                        
+
                     }
-                    
+
                     fileColumn.close();
                     vector <Primary> primaryReaded;
                     primaryReaded = getAllPrimary(-1);
@@ -855,11 +855,11 @@ bool createTable(Table newTable, vector<Column> columns){
                         filepks << primaryReaded.at(x).getId() << separator << primaryReaded.at(x).getName() << separator << primaryReaded.at(x).getTable() << separator << primaryReaded.at(x).getOrder() << "\n" ;
                     }
                     filepks.close();
-                    
-                    
+
+
                     return true;
-                    
-                    
+
+
                 }else{
 
                     ofstream fileTables;
@@ -867,16 +867,16 @@ bool createTable(Table newTable, vector<Column> columns){
                     fileTables << 0 << separator << newTable.getName() << separator << newTable.getDatabase() << "\n" ;
                     fileTables.close();
                     ofstream fileTable;
-                    fileTable.open(newTablePath);
+                    fileTable.open(newTablePath.c_str());
                     fileTable.close();
-                    
+
                     ofstream fileMeta;
                     fileMeta.open(columnsPath);
                     for (int x = 0; x < columns.size(); x++) {
                         fileMeta << columns.at(x).getPk() << separator << columns.at(x).getSerial() << separator << columns.at(x).getName() << separator << columns.at(x).getType() << separator << columns.at(x).getSize() << separator << columns.at(x).getOptional() << separator << columns.at(x).getFk() << separator << 0 << "\n" ;
                     }
                     fileMeta.close();
-                    
+
                     ofstream filepks;
                     filepks.open(pksPath);
                     int contOrdem = 1;
@@ -906,15 +906,15 @@ vector<Foreing> getAllFks(){
 		        if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
                     vector <string> pkline;
                     pkline = explode(line, separator);
-                    
+
                     int id = atoi(pkline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
                     int fk = atoi(pkline.at(1).c_str());//CONVERTE STRING PARA INTEIRO
-                    
+
                     Foreing newforeing(id, fk);
                     fks.push_back(newforeing);
                 }
 		    }
-            
+
             file.close();
             return fks;
         }else{
@@ -926,38 +926,90 @@ return fks;
 }
 
 bool setForeingKey(Column col, int pk){
-    
-    cout << "aaaaaa";
-    
-    if (pk!=-1) {
-        vector<Primary> pks = getAllPrimary(pk);
-        if (pks.size()!=0){
-            if (pks.at(0).getId()==pk) {
-                if (fileExists(fksPath)) {
-                    vector<Foreing>fks = getAllFks();
-                    int newFkId = fks.at(fks.size()-1).getId()+1;
-                    Foreing newforeing(newFkId,pk);
-                    fks.push_back(newforeing);
-                    ofstream filefks;
-                    filefks.open(fksPath);
-                    for (int x = 0; x < fks.size(); x++) {
-                        filefks << fks.at(x).getId() << separator << fks.at(x).getFk() << "\n" ;
-                    }
-                    filefks.close();
-                    return true;
-                }else{
-                    ofstream filefks;
-                    filefks.open(fksPath);
-                    filefks << 0 << separator << pk << "\n" ;
-                    filefks.close();
-                    return true;
+
+    if (pk != -1){
+        vector <Primary> pkData = getAllPrimary(-1);
+        for (int x=0; x<pkData.size();x++){
+            if (pk == pkData.at(x).getId()){
+                cout << "ID " << pk <<" existe na tabela PK.data" << endl;
+                vector <Column> columnData = getAllColumns(-1);
+                for(int x1=0;x1<columnData.size();x1++){
+                    if (col.getName() == columnData.at(x1).getName()){
+                        cout << "Coluna "<<col.getName() << " existe no arquivo Columns.data." << endl;
+                       if (fileExists(fksPath)){//Se o arquivo existe faz uma destas duas coisas
+                            vector<Foreing> fks = getAllFks();
+                            if (columnData.at(x1).getFk()== -1){
+                                cout << "Coluna ainda sem FK setada" << endl;
+                                int newFkId = fks.at(fks.size()-1).getId()+1;
+                                cout << "Novo id FK: " << newFkId << endl;
+                                Foreing newFK(newFkId,pk);
+                                fks.push_back(newFK);
+                                ofstream filefks;
+                                filefks.open(fksPath);
+                                for(int x2=0;x2<fks.size();x2++){
+                                  filefks << fks.at(x2).getId() << separator << fks.at(x2).getFk() << "\n";
+                                }
+                                filefks.close();
+                                ofstream fileC;
+                                fileC.open(columnsPath);
+                                for (int x2=0;x2<columnData.size();x2++){
+                                   if(columnData.at(x1).getName() == columnData.at(x2).getName()){
+                                    columnData.at(x2).setFk(newFkId);
+                                   }
+                                    fileC << columnData.at(x2).getPk() << separator << columnData.at(x2).getSerial() << separator << columnData.at(x2).getName() << separator << columnData.at(x2).getType() << separator << columnData.at(x2).getSize() << separator << columnData.at(x2).getOptional() << separator << columnData.at(x2).getFk() << separator << columnData.at(x2).gettableId() << "\n" ;
+                                 }
+                                filefks.close();
+                                return true;
+
+                            }else{
+                                cout << "Coluna com FK setada, valor deve ser mudado em FK Data" << endl;
+                                vector<Foreing> fks = getAllFks();
+                                ofstream filefks;
+                                filefks.open(fksPath);
+                                for (int i=0;i<fks.size();i++){
+                                        if (fks.at(i).getId() == columnData.at(x1).getFk()){
+                                            fks.at(i).setFk(pk);
+                                        }
+                                   filefks << fks.at(i).getId() << separator << fks.at(i).getFk() << "\n" ;
+                                }
+                                filefks.close();
+                                return true;
+                            }
+
+
+                            }else{//Senão cria o arquivo
+                                ofstream filefks;
+                                filefks.open(fksPath);
+                                filefks << 0 << separator << pk << "\n" ;
+                                filefks.close();
+                                ofstream fileC;
+                                fileC.open(columnsPath);
+                                for (int x2=0;x2<columnData.size();x2++){
+                                   if(columnData.at(x1).getName() == columnData.at(x2).getName()){
+                                    columnData.at(x2).setFk(0);
+                                   }
+                                    fileC << columnData.at(x2).getPk() << separator << columnData.at(x2).getSerial() << separator << columnData.at(x2).getName() << separator << columnData.at(x2).getType() << separator << columnData.at(x2).getSize() << separator << columnData.at(x2).getOptional() << separator << columnData.at(x2).getFk() << separator << columnData.at(x2).gettableId() << "\n" ;
+                                 }
+                                filefks.close();
+                                return true;
+                            }
+                        }
+
+
                 }
+                cout << "Saiu do FOR das colunas, Coluna inexistente" << endl;
+                return false;
             }
-        }else{
-            return false;
+
+
         }
-    }
+        cout << "Saiu do FOR das primary keys, PK inexistente" << endl;
+        return false;
+
+    }else {
     return false;
+    }
+
 }
 
 #pragma globals
@@ -966,17 +1018,17 @@ Database defaultDb = getDefaultDb();  //variavel global? aqui nao funcionou
 
 
 int main() {
-    
-    /*
-    
+
+
+/*
     bool result;
     Tablespace newTS(0,"tablespace0","");
     result = createTableSpace(newTS);
 
     Tablespace newTS1(0,"tablespace1","/Users/rodrigo/Desktop");
     result = createTableSpace(newTS1);
-
-    Tablespace newTS2(0,"tablespace2","/Users/rodrigo/Desktop");
+    cout << "Resultado:" << result << endl;
+    Tablespace newTS2(0,"tablespace2","C:/Users/Andrey/Desktop");
     result = createTableSpace(newTS2);
 
     Database db(6666,"loja",0,true);
@@ -987,101 +1039,101 @@ int main() {
 
     Database db3(6666,"revendedora",3,false);
     createDatabase(db3);
+*/
 
-    */
-  
-    Column idCliente(true, true, "idCliente", 0, 10, false, -1, 1);
-    
-    
+
+    Column idCliente(true, true, "nomeCliente", 0, 10, false, -1, 1);
+
+
     setForeingKey(idCliente, 0);
-    /*
-    
-    
+
+
+/*
     Table tabelacliente(0,"cliente", 1);
     vector <Column> colunasTabelaCliente;
-    
+
     //     Column(bool newPk, bool newSerial, string newName, int newType, int newSize, bool newOptional, string newValue, int newFk, int newTableId){
-    
+
     Column idCliente(true, true, "idCliente", 0, 10, false, -1, -1);
     Column nomeCliente(false, false, "nomeCliente", 255, 255, false, -1, -1);
     Column cpfCliente(false, false, "cpfCliente", 0, 30, false, -1, -1);
     Column especialCliente(false, false, "especialCliente", 2, 1, true, -1, -1);
-    
-    
-     
+
+
+
     colunasTabelaCliente.push_back(idCliente);
     colunasTabelaCliente.push_back(nomeCliente);
     colunasTabelaCliente.push_back(cpfCliente);
     colunasTabelaCliente.push_back(especialCliente);
 
     createTable(tabelacliente, colunasTabelaCliente);
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
     Table tabelafilme(0,"filme", 1);
     vector <Column> colunasTabelaFilme;
-    
+
     //     Column(bool newPk, bool newSerial, string newName, int newType, int newSize, bool newOptional, string newValue, int newFk, int newTableId){
-    
+
     Column idFilme(true, true, "idFilme", 0, 10, false, -1, -1);
     Column nomeFilme(false, false, "nomeFilme", 1, 255, false, -1, -1);
     Column diretor(false, false, "diretor", 1, 255, true, -1, -1);
     Column locado(false, false, "locado", 2, 1, false, -1, -1);
-    
-    
+
+
     colunasTabelaFilme.push_back(idFilme);
     colunasTabelaFilme.push_back(nomeFilme);
     colunasTabelaFilme.push_back(diretor);
     colunasTabelaFilme.push_back(locado);
-    
+
     createTable(tabelafilme, colunasTabelaFilme);
-    
+
     /*
 
     Table tabelalocacao(0,"locacao", 1);
     vector <Column> colunasTabelalocacao;
-    
+
     //     Column(bool newPk, bool newSerial, string newName, int newType, int newSize, bool newOptional, string newValue, int newFk, int newTableId){
-    
+
     Column idLocacao(true, true, "idLocacao", 0, 10, false, -1, -1);
     Column idFilme(false, false, "idFilme", 1, 255, false, -1, -1);
     Column idCliente(false, false, "idCliente", 1, 255, true, -1, -1);
     Column dataLocacao(false, false, "locado", 2, 1, false, -1, -1);
-    
-    
+
+
     colunasTabelaFilme.push_back(idFilme);
     colunasTabelaFilme.push_back(nomeFilme);
     colunasTabelaFilme.push_back(diretor);
     colunasTabelaFilme.push_back(locado);
-    
+
     createTable(tabelalocacao, colunasTabelalocacao);
 */
-    
+
 //    Table tabelalocacao(0,"locacao", 1);
-    
-    
+
+
 //    Table tabelafilme(0,"filme", 1);
-    
-    
-    
-    
-    
+
+
+
+
+
     //cout << "db default: \n" << defaultDb.getId() << " - " << defaultDb.getName() << " - " << defaultDb.getTablespace();
-    
-    
-    
+
+
+
 	//ABAIXO COMENTARIOS PARA NAO ESQUECER A SINTAXE DAS COISAS
-    
-    
+
+
     //	vector<Database> dbs; //vetor de classes do tipo database
-    
-    
+
+
     //	cout << "Hello" << endl; // prints Hello
-    
+
     /*
      cout << "ints size: " << ints.size() << endl;
      ints.push_back(123);
@@ -1089,47 +1141,47 @@ int main() {
      ints.pop_back();
      cout << "ints size: " << ints.size() << endl;
      */
-    
+
     /*
      Database db1(1,"banco1","/var/www/",true);  //instancia db1 do tipo database e seta os valores através do método construtor --> Database(int newId, string newName, string newDir, bool newDefaultDb){
      Database db2(2,"banco222","/var/www/db1/",false);
      Database db3(3,"banco3333","/users/mouro/banco3/",false);
      Database db4(4,"banco44444","/root/db4",false);
-     
+
      dbs.push_back(db1); //manda db1 pro vetor
-     
+
      for (int x = 0; x<dbs.size(); x++){
      cout << "id: " << dbs.at(x).getId() << "name: "<< dbs.at(x).getName()  << " dir: "<< dbs.at(x).getDir() << " default: " << dbs.at(x).getDefault() << endl;
      }
-     
+
      createDatabase(db1); //CHAMA FUNCAO CREATEDATABASE QUE POR ENQUANTO SÓ VERIFICA SE UM ARQUIVO EXISTE
      createDatabase(db2);
      createDatabase(db3);
-     
-     
+
+
      /*   //TENTATIVA DE GRAVAR O VETOR DE BANCOS NO ARQUIVO, AINDA NAO FUNCIONA
-     
+
      ostream outpuf_file("dbs.data");
      std:ofstream_iterator <Database> output_iterator(outpuf_file, "\n");
      //	cout << "db " << dbs.at(2) << endl;
      */
-    
+
     /*
      std::vector<std::string> example;
      example.push_back("this");
      example.push_back("is");
      example.push_back("a");
      example.push_back("test");
-     
+
      std::ofstream output_file("./example.txt");
      std::ostreambuf_iterator<std::string> output_iterator_tag;
      std::copy(example.begin(), example.end(), output_iterator_tag);
-     
+
      */
-    
+
     //	cout << "database name: " << db1.getName() << "dir: " << db1.getDir() << endl;
-    
+
     system("pause");
 	return 0;
-    
+
 }
