@@ -931,17 +931,17 @@ bool setForeingKey(Column col, int pk){
         vector <Primary> pkData = getAllPrimary(-1);
         for (int x=0; x<pkData.size();x++){
             if (pk == pkData.at(x).getId()){
-                cout << "ID " << pk <<" existe na tabela PK.data" << endl;
+                if (log) {cout << "ID " << pk <<" existe na tabela PK.data" << endl;}
                 vector <Column> columnData = getAllColumns(-1);
                 for(int x1=0;x1<columnData.size();x1++){
                     if (col.getName() == columnData.at(x1).getName()){
-                        cout << "Coluna "<<col.getName() << " existe no arquivo Columns.data." << endl;
+                       if (log) { cout << "Coluna "<<col.getName() << " existe no arquivo Columns.data." << endl;}
                        if (fileExists(fksPath)){//Se o arquivo existe faz uma destas duas coisas
                             vector<Foreing> fks = getAllFks();
                             if (columnData.at(x1).getFk()== -1){
-                                cout << "Coluna ainda sem FK setada" << endl;
+                                if (log) {cout << "Coluna ainda sem FK setada" << endl;}
                                 int newFkId = fks.at(fks.size()-1).getId()+1;
-                                cout << "Novo id FK: " << newFkId << endl;
+                                if (log) { cout << "Novo id FK: " << newFkId << endl;}
                                 Foreing newFK(newFkId,pk);
                                 fks.push_back(newFK);
                                 ofstream filefks;
@@ -962,7 +962,7 @@ bool setForeingKey(Column col, int pk){
                                 return true;
 
                             }else{
-                                cout << "Coluna com FK setada, valor deve ser mudado em FK Data" << endl;
+                                if (log) {cout << "Coluna com FK setada, valor deve ser mudado em FK Data" << endl;}
                                 vector<Foreing> fks = getAllFks();
                                 ofstream filefks;
                                 filefks.open(fksPath);
@@ -978,6 +978,7 @@ bool setForeingKey(Column col, int pk){
 
 
                             }else{//Senão cria o arquivo
+                                if (log) {cout << "Arquivo FK.DATA inexistente. Sendo criado..."<<endl;}
                                 ofstream filefks;
                                 filefks.open(fksPath);
                                 filefks << 0 << separator << pk << "\n" ;
