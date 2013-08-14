@@ -40,6 +40,32 @@ using namespace std;
 #define separator "|>#<|"
 #define log 1
 
+class Attribute{
+private:
+    string name;
+    string value;
+    int type;
+public:
+    string getName(){
+        return this->name;
+    }
+    string getValue(){
+        return this->value;
+    }
+    int getType(){
+        return this->type;
+    }
+    void setName(string newName){
+        this->name = newName;
+    }
+    void setValue(string newValue){
+        this->value = newValue;
+    }
+    void setType(int newType){
+        this->type = newType;
+    }
+};
+
 class Primary{
 private:
     int id;
@@ -641,6 +667,20 @@ string getPathFromTableSpace(int idTs){
     return "";
 }
 
+string getPathFromDatabase(int dbId){
+    vector <Database> dbReaded = getAllDatabase();
+    for (int i=0;i<dbReaded.size();i++){
+        if (dbId == dbReaded.at(i).getId()){
+            string path = getPathFromTableSpace(dbReaded.at(i).getTablespace());
+            path = path + "/" + dbReaded.at(i).getName();
+            return path;
+        }
+
+    }
+    cout << "Database inexistente. " << endl;
+    return "";
+}
+
 vector<Table> getAllTables(){
 	vector <Table> tablesDatas;
 	if(fileExists(tablesPath)){
@@ -701,13 +741,13 @@ vector<Column> getAllColumns(int newTableId){
     //                Column(bool newPk, bool newSerial, string newName, int newType, int newSize, bool newOptional, int newFk, int newTableId){
 
                     if (newTableId==-1) {
-                        Column columnReaded(pk, serial, name, type, size, optional, fk, tableId);
-                        colDatas.push_back(columnReaded);
+                         Column columnReaded(pk, serial, name, type, size, optional, fk, tableId);
+                         colDatas.push_back(columnReaded);
                     }else{
                         if (newTableId == tableId) {
                             Column columnReaded(pk, serial, name, type, size, optional, fk, tableId);
                             colDatas.push_back(columnReaded);
-                            break;
+
                         }
                     }
 
@@ -1020,7 +1060,7 @@ Database defaultDb = getDefaultDb();  //variavel global? aqui nao funcionou
 
 int main() {
 
-
+    //cout << path << endl;
 /*
     bool result;
     Tablespace newTS(0,"tablespace0","");
@@ -1042,13 +1082,13 @@ int main() {
     createDatabase(db3);
 */
 
-
+/*
     Column idCliente(true, true, "nomeCliente", 0, 10, false, -1, 1);
 
 
     setForeingKey(idCliente, 0);
 
-
+*/
 /*
     Table tabelacliente(0,"cliente", 1);
     vector <Column> colunasTabelaCliente;
