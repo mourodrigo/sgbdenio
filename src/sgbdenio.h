@@ -187,7 +187,7 @@ public:
 class Column{ //metadados de uma coluna (de uma tabela)
 private:
     bool pk;
-    bool serial;
+    int serial;
     string name;
     int type;
     int size;
@@ -254,7 +254,7 @@ public:
         this->tableId = newTableId;
     }
     
-    Column(bool newPk, bool newSerial, string newName, int newType, int newSize, bool newOptional, int newFk, int newTableId){
+    Column(bool newPk, int newSerial, string newName, int newType, int newSize, bool newOptional, int newFk, int newTableId){
         this->pk = newPk;
         this->serial = newSerial;
         this->name = newName;
