@@ -46,13 +46,13 @@ int main() {
     
     //     Column(bool newPk, bool newSerial, string newName, int newType, int newSize, bool newOptional, string newValue, int newFk, int newTableId){
     
-    Column idCliente(true, true, "idCliente", 0, 10, false, -1, -1); // primarykey(sim), serial(sim), nome da coluna(idCliente), tipo(int), tamanho(10), opcional(nao), foreingkey(nao), id da tabela (será sempre -1 na criação da tabela)
+    Column idCliente(true, 0, "idCliente", 0, 10, false, -1, -1); // primarykey(sim), serial(sim), nome da coluna(idCliente), tipo(int), tamanho(10), opcional(nao), foreingkey(nao), id da tabela (será sempre -1 na criação da tabela)
     
-    Column nomeCliente(false, false, "nomeCliente", 1, 255, false, -1, -1); // primarykey(nao), serial(nao), nome da coluna(nomeCLiente), tipo(string), tamanho(255), opcional(nao), foreingkey(nao), id da tabela (será sempre -1 na criação da tabela)
+    Column nomeCliente(false, -1, "nomeCliente", 1, 255, false, -1, -1); // primarykey(nao), serial(nao), nome da coluna(nomeCLiente), tipo(string), tamanho(255), opcional(nao), foreingkey(nao), id da tabela (será sempre -1 na criação da tabela)
     
-    Column cpfCliente(false, false, "cpfCliente", 0, 30, false, -1, -1);// primarykey(nao), serial(nao), nome da coluna(cpfCliente), tipo(int), tamanho(30), opcional(nao), foreingkey(nao), id da tabela (será sempre -1 na criação da tabela)
+    Column cpfCliente(false, -1, "cpfCliente", 0, 30, false, -1, -1);// primarykey(nao), serial(nao), nome da coluna(cpfCliente), tipo(int), tamanho(30), opcional(nao), foreingkey(nao), id da tabela (será sempre -1 na criação da tabela)
     
-    Column especialCliente(false, false, "especialCliente", 2, 1, true, -1, -1);// primarykey(nao), serial(nao), nome da coluna(especialCliente), tipo(boolean), tamanho(1), opcional(nao), foreingkey(nao), id da tabela (será sempre -1 na criação da tabela)
+    Column especialCliente(false, -1, "especialCliente", 2, 1, true, -1, -1);// primarykey(nao), serial(nao), nome da coluna(especialCliente), tipo(boolean), tamanho(1), opcional(nao), foreingkey(nao), id da tabela (será sempre -1 na criação da tabela)
     
     colunasTabelaCliente.push_back(idCliente);  //insere todas as colunas num "vetor de colunas"
     colunasTabelaCliente.push_back(nomeCliente);
@@ -68,10 +68,10 @@ int main() {
     Table tabelafilme(0,"filme", 1);
     vector <Column> colunasTabelaFilme;
     
-    Column idFilme(true, true, "idFilme", 0, 10, false, -1, -1);
-    Column nomeFilme(false, false, "nomeFilme", 1, 255, false, -1, -1);
-    Column diretor(false, false, "diretor", 1, 255, true, -1, -1);
-    Column locado(false, false, "locado", 2, 1, false, -1, -1);
+    Column idFilme(true, 0, "idFilme", 0, 10, false, -1, -1);
+    Column nomeFilme(false, -1, "nomeFilme", 1, 255, false, -1, -1);
+    Column diretor(false, -1, "diretor", 1, 255, true, -1, -1);
+    Column locado(false, -1, "locado", 2, 1, false, -1, -1);
     
     
     colunasTabelaFilme.push_back(idFilme);
@@ -87,10 +87,10 @@ int main() {
      vector <Column> colunasTabelalocacao;
      
      
-     Column idLocacao(true, true, "idLocacao", 0, 10, false, -1, -1);
-     Column idFilmeLocacao(false, false, "idFilme", 1, 255, false, -1, -1);
-     Column idClienteLocacao(false, false, "idCliente", 1, 255, true, -1, -1);
-     Column dataLocacao(false, false, "locado", 2, 1, false, -1, -1);
+     Column idLocacao(true, 0, "idLocacao", 0, 10, false, -1, -1);
+     Column idFilmeLocacao(false, -1, "idFilme", 1, 255, false, -1, -1);
+     Column idClienteLocacao(false, -1, "idCliente", 1, 255, true, -1, -1);
+     Column dataLocacao(false, -1, "locado", 2, 1, false, -1, -1);
      
 
      colunasTabelaFilme.push_back(idLocacao);
@@ -102,7 +102,7 @@ int main() {
     
     
     
-     Column idClientefk(true, true, "nomeCliente", 0, 10, false, -1, 1); //cria foreing key para nomeCliente
+     Column idClientefk(true, 0, "nomeCliente", 0, 10, false, -1, 1); //cria foreing key para nomeCliente
      setForeingKey(idCliente, 0);
 
     
