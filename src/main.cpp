@@ -14,6 +14,7 @@
 int main() {
     
     
+    /*
     // ======= TABLESPACE =======
     
     //AO CRIAR A PRIMEIRA TABLESPACE TAMBÉM SERÁ CRIADA UMA TABLESPACE PADRÃO NO DIRETÓRIO RAIZ
@@ -105,8 +106,23 @@ int main() {
      Column idClientefk(true, 0, "nomeCliente", 0, 10, false, -1, 1); //cria foreing key para nomeCliente
      setForeingKey(idCliente, 0);
 
+     */
     
-    system("pause");
-	return 0;
+    //inserindo na tabela
+    
+    vector<string> values;
+    values.push_back("01");
+    values.push_back("02");
+    values.push_back("03");
+    values.push_back("04");
+    
+    insert(values, "filme");
+    
+    
+//    string palavra = "19000";
+//    cout << checkDigit(palavra) << endl;
+    
+     system("pause");
+     return 0;
     
 }
