@@ -88,3 +88,4 @@ int checkDigit(string palavra);
 bool checkType(string palavra,int type);
 
 vector<vector<string>> select(vector<string> parameters, string tableName, vector<string> where);
+
