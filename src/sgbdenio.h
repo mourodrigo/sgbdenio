@@ -5,7 +5,7 @@
 //  Created by Rodrigo on 13/08/13.
 //  Copyright (c) 2013 uffs. All rights reserved.
 //
-
+/*
 #include <stdlib.h>
 #include <iostream>
 #include <string>
@@ -23,9 +23,9 @@
 #define MKDIR(a) _mkdir(a)
 #else
 #include <sys/stat.h>
-#define MKDIR(a) mkdir(a, 0777)  /*Aqui o 0777 define o modo como igual ao umask, ou seja as permissões que resultariam de um mkdir na shell */
+#define MKDIR(a) mkdir(a, 0777)  //Aqui o 0777 define o modo como igual ao umask, ou seja as permissões que resultariam de um mkdir na shell
 #endif
-
+//#include "sgbdenio.cpp"
 
 #define tsdefault getCurrentPath() + "/ts_default"
 #define tspath "tablespace.data"
@@ -41,266 +41,9 @@
 #define sgbdenio_sgbdenio_h
 #endif
 
-#define log 1 // se for 1 imprime mensagens de debug 
-
-
-using namespace std;
-
-class Primary{ //metadados de uma primary key
-private:
-    int id;
-    string name;
-    string table;
-    int order;
-    
-public:
-    int getId(){
-        return this->id;
-    }
-    string getName(){
-        return this->name;
-    }
-    string getTable(){
-        return this->table;
-    }
-    int getOrder(){
-        return this->order;
-    }
-    void setId(int newId){
-        this->id = newId;
-    }
-    void setName(string newName){
-        this->name = newName;
-    }
-    void setTable(string newTable){
-        this->table = newTable;
-    }
-    void setOrder(int newOrder){
-        this->order= newOrder;
-    }
-    Primary(int newId, string newName, string newTable,int newOrder){
-        this->id = newId;
-        this->name = newName;
-        this->table = newTable;
-        this->order = newOrder;
-    }
-};
-
-class Foreing{ //metadados de uma foreing key
-private:
-    int id;
-    int fk;
-public:
-    int getId(){
-        return this->id;
-    }
-    void setId(int newId){
-        this->id = newId;
-    }
-    int getFk(){
-        return this->fk;
-    }
-    void setFk(int newFk){
-        this->fk = newFk;
-    }
-    Foreing(int newId, int newFk){
-        this->id = newId;
-        this->fk = newFk;
-    }
-};
-
-class Table{ //metadados de uma tabela
-private:
-    int id;
-    string name;
-    int dbId;
-    
-public:
-    int getId(){
-        return this->id;
-    }
-    string getName(){
-        return this->name;
-    }
-    int getDatabase(){
-        return this->dbId;
-    }
-    void setId(int newId){
-        this->id = newId;
-    }
-    void setName(string newName){
-        this->name = newName;
-    }
-    void setDatabase(int newDb){
-        this->dbId = newDb;
-    }
-    
-    Table(int newId, string newName, int newDb){
-        this->id = newId;
-        this->name = newName;
-        this->dbId = newDb;
-    }
-};
-
-class Database{ ///metadados de um database
-private:
-    int id;
-    string name;
-    int tsID;
-    bool defaultDb;
-    
-public:
-    int getId(){
-        return this->id;
-    }
-    string getName(){
-        return this->name;
-    }
-    int getTablespace(){
-        return this->tsID;
-    }
-    bool getDefault(){
-        return this->defaultDb;
-    }
-    void setId(int newId){
-        this->id = newId;
-    }
-    void setName(string newName){
-        this->name = newName;
-    }
-    void setTablespace(int newTsID){
-        this->tsID = newTsID;
-    }
-    void setDefault(bool newDefault){
-        this->defaultDb = newDefault;
-    }
-    
-    
-    Database(int newId, string newName, int newTsID, bool newDefaultDb){
-        this->id = newId;
-        this->name = newName;
-        this->tsID = newTsID;
-        this->defaultDb = newDefaultDb;
-    }
-};
-
-class Column{ //metadados de uma coluna (de uma tabela)
-private:
-    bool pk;
-    int serial;
-    string name;
-    int type;
-    int size;
-    bool optional;
-    int fk;
-    int tableId;
-    
-public:
-    bool getPk(){
-        return this->pk;
-    }
-    
-    void setPk(bool newPk){
-        this->pk = newPk;
-    }
-    
-    int getSerial(){
-        return this->serial;
-    }
-    
-    void setSerial(int newSerial){
-        this->serial = newSerial;
-    }
-    
-    string getName(){
-        return this->name;
-    }
-    void setName(string newName){
-        this->name = newName;
-    }
-    
-    int getType(){
-        return this->type;
-    }
-    void setType(int newType){
-        this->type = newType;
-    }
-    
-    int getSize(){
-        return this->size;
-    }
-    void setSize(int newSize){
-        this->size = newSize;
-    }
-    
-    bool getOptional(){
-        return this->optional;
-    }
-    void setOptional(bool newOptional){
-        this->optional = newOptional;
-    }
-    
-    int getFk(){
-        return this->fk;
-    }
-    void setFk(int newFk){
-        this->fk = newFk;
-    }
-    
-    int gettableId(){
-        return this->tableId;
-    }
-    void settableId(int newTableId){
-        this->tableId = newTableId;
-    }
-    
-    Column(bool newPk, int newSerial, string newName, int newType, int newSize, bool newOptional, int newFk, int newTableId){
-        this->pk = newPk;
-        this->serial = newSerial;
-        this->name = newName;
-        this->type = newType;
-        this->size = newSize;
-        this->optional = newOptional;
-        this->fk = newFk;
-        this->tableId = newTableId;
-    }
-    
-};
-
-class Tablespace{ //metadados de uma tablespace
-private:
-    int id;
-    string name;
-    string location;
-    
-public:
-    int getId(){
-        return this->id;
-    }
-    string getName(){
-        return this->name;
-    }
-    string getLocation(){
-        return this->location;
-    }
-    void setID(int newId){
-        this->id = newId;
-    }
-    void setName(string newName){
-        this->name = newName;
-    }
-    void setLocation(string newLocation){
-        this->location = newLocation;
-    }
-    
-    Tablespace(int newId,string newName, string newLocation){
-        this->id = newId;
-        this->name = newName;
-        this->location = newLocation;
-    }
-};
-
-
+#define log 1 // se for 1 imprime mensagens de debug
+*/
+#include "sgbdenio.cpp"
 
 vector<string> explode( const string& s, const string& delimiter ); //converte uma string para um vetor separando por um delimitador
 
@@ -340,5 +83,6 @@ bool setForeingKey(Column col, int pk); //alter table que seta a foreing key, (c
 
 bool insert(vector<string> values, string tableName); // insert table
 
-bool checkDigit(string palavra);
+int checkDigit(string palavra);
 
+bool checkType(string palavra,int type);
