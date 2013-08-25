@@ -937,6 +937,8 @@ bool incrementSerial(Column col){
     return false;
 }
 
+
+
 bool insert(vector<string> values, string tableName){
     vector<Table> tables = getAllTables();
     for (int t = 0; t < getAllTables().size(); t++) {
@@ -951,14 +953,31 @@ bool insert(vector<string> values, string tableName){
 
 
                     for (int c = 0; c < columns.size(); c++) {
-
                         if (columns.at(c).getSerial()>-1) {
-                            //values.at(c) = to_string(columns.at(c).getSerial());//Para MAC
-                            char *serial;//WINDOWS
+                          //  values.at(c) = to_string(columns.at(c).getSerial());//Para MAC
+
+ //   incrementSerial(columns.at(c));
+                        char *serial;//WINDOWS
+                        //int inteiro =  my_itoa(columns.at(c).getSerial(), serial );
+
+                        int Number = columns.at(c).getSerial();       // number to be converted to a string
+
+                        string Result;          // string which will contain the result
+
+                        ostringstream convert;   // stream used for the conversion
+
+                        convert << Number;      // insert the textual representation of 'Number' in the characters in the stream
+
+                        Result = convert.str(); // set 'Result' to the contents of the stream
+                        cout << "int: " << Number << " string: " << Result << endl;
+
+                        incrementSerial(columns.at(c));
+
+                  /*          char *serial;//WINDOWS
                             itoa(columns.at(c).getSerial(),serial,10);//WINDOWS
                             values.at(c) = serial;//WINDOWS
                             incrementSerial(columns.at(c));
-                        }
+                    */    }
 
                         //adicionar outras checagens para cada parâmetro aqui
 

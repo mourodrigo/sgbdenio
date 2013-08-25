@@ -13,9 +13,10 @@
 
 
 int main() {
+    /*
     string palavra = "";
     cout << checkType(palavra,4)<< endl;
-
+*/
     /*
     // ======= TABLESPACE =======
 
@@ -111,8 +112,9 @@ int main() {
      */
 
     //inserindo na tabela
+    cout << "oi" << endl;
 
-    /*vector<string> values;
+    vector<string> values;
     values.push_back("01");
     values.push_back("02");
     values.push_back("03");
@@ -123,7 +125,7 @@ int main() {
 
 //    string palavra = "19000";
 //    cout << checkDigit(palavra) << endl;
-     */
+
      system("pause");
      return 0;
 
