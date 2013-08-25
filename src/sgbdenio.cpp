@@ -1123,60 +1123,61 @@ vector<vector<string>> select(vector<string> parameters, string tableName, vecto
                 Table selectTable = tables.at(t);
                 string tablepath = getPathFromDatabase(getDefaultDb().getId()) + "/" + selectTable.getName() + ".data";
                 
-                
-                
                 string line;
                 ifstream file (tablepath);
-                if (file.is_open()){
-                    while ( file.good() ){
-                        getline (file,line);
-                        if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
-                            if (parameters.size()==1 && (parameters.at(0).compare("*")==0)) {
+                
+                if (parameters.size()==1 && (parameters.at(0).compare("*")==0)) {
+                    string line;
+                    ifstream file (tablepath);
+                    if (file.is_open()){
+                        while ( file.good() ){
+                            getline (file,line);
+                            if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
+                                    vector <string> tuple;
+                                    tuple = explode(line, separator);
+                                    select.push_back(tuple);
+                            }
+                        }
+                        file.close();
+                    }
+                    return select;
+                }else{
+                    vector <vector<string>> returnSelect;
+                    
+                    string line;
+                    ifstream file (tablepath);
+                    if (file.is_open()){
+                        while ( file.good() ){
+                            getline (file,line);
+                            int lineCount = 0;
+                            if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
                                 vector <string> tuple;
                                 tuple = explode(line, separator);
                                 select.push_back(tuple);
-                            }else{
-                                vector <string> tuple;
-                                tuple = explode(line, separator);
-                                vector <string> returntuple;
+                                vector<string> result;
                                 
-                                for (int t = 0; t<tuple.size(); t++) {
-                                    for (int p = 0; p<parameters.size(); p++) {
-                                        for (int c = 0; columns.size(); c++) {
-                                            if (columns.at(c).getName().compare(parameters.at(p))) {
-                                                returntuple.push_back(tuple.at(t));
-                                            }
+                                for (int h = 0; h<parameters.size(); h++) {
+                                    for (int g = 0; g<columns.size(); g++) {
+                                        if (parameters.at(h).compare(columns.at(g).getName())==0) {
+                                            //cout << "coluna " << columns.at(g).getName() << "[]" << parameters.at(h) << endl;
+                                            result.push_back(tuple.at(g));
+                                            break;
                                         }
                                     }
+                                    
+                                    
                                 }
-                                
-                                select.push_back(returntuple);
-                                
+                            returnSelect.push_back(result);
                             }
+                            lineCount++;
                         }
+                        file.close();
                     }
-                    file.close();
+                    return returnSelect;
                 }
-                
-                /*
-                
-                
-                
-                for (int g = 0; g<columns.size(); g++) {
-                    for (int h = 0; h<parameters.size(); h++) {
-                        if (parameters.at(h).compare(columns.at(g).getName())==0) {
-                            vector<string> strcol =  getColFromTable(tablepath, g);
-                            select.push_back(strcol);
-                        }
-                    }
-                }
-                 */
-                
             }
         }
     }
-    
-    
     return select;
 }
 
