@@ -132,12 +132,12 @@ int main() {
     
     vector<string> values;
 
-    /*values.push_back("idFilme");
-    values.push_back("nomeFilme");
+    values.push_back("idFilme");
+  //  values.push_back("nomeFilme");
     values.push_back("diretor");
     values.push_back("locado");
-    */
-    values.push_back("*");
+    
+    //values.push_back("*");
     
     vector<vector<string>> selectResult =  select(values, "filme", values);
     
