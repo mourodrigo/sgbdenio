@@ -20,7 +20,7 @@
 #include <limits.h>
 #include <unistd.h>
 #include <stdio.h>
-#ifdef WIN32 || _WIN32
+#ifdef WIN32 //|| _WIN32
 #include <direct.h>
 #define MKDIR(a) _mkdir(a)
 #else
@@ -300,6 +300,145 @@ public:
         this->location = newLocation;
     }
 };
+
+
+
+int checkDigit(string palavra){
+    bool res;
+    int flag = 0;
+    if(palavra.at(palavra.length()-1)=='.')
+        return -1;
+    for (int i=0;i<palavra.length();i++){
+        if(flag > 1)
+            return -1;
+        if(palavra.at(i)=='.'){
+            flag++;
+        }else{
+            res = isdigit(palavra.at(i));
+            if(!res)
+                return -1;
+        }
+    }
+    return flag;
+}
+
+bool checkType(string palavra,int type){
+    //integer = 0 | float = 1 | bool = 2 | string = 3 | data = 4 | hora = 5
+    int res;
+    int flag = 0;
+    bool resBool;
+    switch(type){
+        case 0:
+            //cout << "Entrou case 0 - integer" << endl;
+            res = checkDigit(palavra);
+            if(res != 0)
+                return false;
+            else
+                return true;
+            break;
+        case 1:
+            cout << "Entrou case 1 - float" << endl;
+            res = checkDigit(palavra);
+            if(res != 1)
+                return false;
+            else
+                return true;
+            break;
+        case 2:
+            //cout << "Entrou case 2 - bool" << endl;
+            if((palavra == "0")||(palavra == "1"))
+                return true;
+            else
+                return false;
+            break;
+        case 3:
+            //cout << "Entrou case 3 - string" << endl;
+            if(palavra == "\0")
+                return false;
+            for(int i=0;i<palavra.length();i++){
+                if(flag == 1)
+                    return true;
+                if(palavra.at(i)!=' ')
+                    flag = 1;
+            }
+            if(flag ==0)
+                return false;
+            else
+                return true;
+            break;
+        case 4:
+            //cout << "Entrou case 4 - data" << endl;
+            if(palavra.length()!=8){
+                return false;
+            }else{
+                for(int i=0;i<palavra.length();i++){//Checa se todos os caracteres da string sao numeros
+                    resBool = isdigit(palavra.at(i));
+                    if(!resBool)
+                        return false;
+                }
+                char ano[5],mes[3],dia[3];//Cria os vetores de character para a data
+                for(int i2=0;i2<4;i2++){//Preenche o ano
+                    ano[i2]=palavra.at(i2);
+                }
+                ano[4]='\0';//Finaliza o ano
+                mes[0]=palavra.at(4);
+                mes[1]=palavra.at(5);
+                mes[2]='\0';//Finaliza o mes
+                dia[0]=palavra.at(6);
+                dia[1]=palavra.at(7);
+                dia[2]='\0';//Finaliza o dia
+                //int anoInteger= atoi(ano);//Converte os vetores para fins de comparaÁ„o
+                int mesInteger = atoi(mes);
+                int diaInteger = atoi(dia);
+                if(mesInteger>12 || mesInteger<1)
+                    return false;
+                if(diaInteger>31 || diaInteger<1)
+                    return false;
+                //cout <<anoInteger<<"-"<<mesInteger<<"-"<<diaInteger<< endl;
+                return true;
+            }
+            break;
+        case 5:
+            //cout <<"Entrou case 5 - hora" << endl;
+            if(palavra.length()!=6){
+                return false;
+            }else{
+                for(int i=0;i<palavra.length();i++){
+                    resBool = isdigit(palavra.at(i));
+                    if(!resBool)
+                        return false;
+                }
+                char hours[3],minutes[3],seconds[3];//Cria os vetores para a hora
+                for(int i2=0;i2<2;i2++){//Atribui os valores corretamente
+                    hours[i2]=palavra.at(i2);
+                    minutes[i2]=palavra.at(i2+2);
+                    seconds[i2]=palavra.at(i2+4);
+                }
+                hours[2]='\0';//finaliza os 3 vetores
+                minutes[2]='\0';
+                seconds[2]='\0';
+                int hourInteger = atoi(hours);//transforma para inteiro para comparaÁ„o
+                int minutesInteger = atoi(minutes);
+                int secondsInteger = atoi(seconds);
+                if(hourInteger > 23 || hourInteger < 0)//checa se nenhum dos valores extrapola os valores possÌveis
+                    return false;
+                if(minutesInteger >59 || minutesInteger < 0)
+                    return false;
+                if(secondsInteger > 59 || secondsInteger < 0)
+                    return false;
+                //cout << hours <<":"<< minutes <<":"<< seconds << endl;
+                return true;
+            }
+            break;
+        default:
+            return false;
+            break;
+    }
+    return false;
+}
+
+
+
 
 
 vector<string> explode( const string& s, const string& delimiter ){ //explode
@@ -949,6 +1088,97 @@ bool incrementSerial(Column col){
 }
 
 
+vector<string> getColFromTable(string tablePath, int tableIndex){
+    vector <string> selectCols;
+    
+    string line;
+    ifstream file (tablePath);
+    if (file.is_open()){
+        while ( file.good() ){
+            getline (file,line);
+            if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
+                vector <string> lines;
+                lines = explode(line, separator);
+                selectCols.push_back(lines.at(tableIndex));
+            }
+        }
+        
+        file.close();
+        
+        
+    }
+    return selectCols;
+}
+
+vector<vector<string>> select(vector<string> parameters, string tableName, vector<string> where){
+    vector <vector<string>> select;
+  
+    vector<Table> tables = getAllTables();
+    for (int t = 0; t < getAllTables().size(); t++) {
+        if (tables.at(t).getName().compare(tableName)==0) {
+            if (tables.at(t).getDatabase()==getDefaultDb().getId()) {
+                int tableId = tables.at(t).getId();
+                vector<Column> columns = getAllColumns(tableId);
+                
+                Table selectTable = tables.at(t);
+                string tablepath = getPathFromDatabase(getDefaultDb().getId()) + "/" + selectTable.getName() + ".data";
+                
+                
+                
+                string line;
+                ifstream file (tablepath);
+                if (file.is_open()){
+                    while ( file.good() ){
+                        getline (file,line);
+                        if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
+                            if (parameters.size()==1 && (parameters.at(0).compare("*")==0)) {
+                                vector <string> tuple;
+                                tuple = explode(line, separator);
+                                select.push_back(tuple);
+                            }else{
+                                vector <string> tuple;
+                                tuple = explode(line, separator);
+                                vector <string> returntuple;
+                                
+                                for (int t = 0; t<tuple.size(); t++) {
+                                    for (int p = 0; p<parameters.size(); p++) {
+                                        for (int c = 0; columns.size(); c++) {
+                                            if (columns.at(c).getName().compare(parameters.at(p))) {
+                                                returntuple.push_back(tuple.at(t));
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                select.push_back(returntuple);
+                                
+                            }
+                        }
+                    }
+                    file.close();
+                }
+                
+                /*
+                
+                
+                
+                for (int g = 0; g<columns.size(); g++) {
+                    for (int h = 0; h<parameters.size(); h++) {
+                        if (parameters.at(h).compare(columns.at(g).getName())==0) {
+                            vector<string> strcol =  getColFromTable(tablepath, g);
+                            select.push_back(strcol);
+                        }
+                    }
+                }
+                 */
+                
+            }
+        }
+    }
+    
+    
+    return select;
+}
 
 bool insert(vector<string> values, string tableName){
     vector<Table> tables = getAllTables();
@@ -960,26 +1190,16 @@ bool insert(vector<string> values, string tableName){
                 if (columns.size()==values.size()) {
                     Table insertTable = tables.at(t);
                     string tablepath = getPathFromDatabase(getDefaultDb().getId()) + "/" + insertTable.getName() + ".data";
-                    bool validation = true;
+                    //bool validation = true;
                     
                     
                     for (int c = 0; c < columns.size(); c++) {
                         if (columns.at(c).getSerial()>-1) {
-                            //  values.at(c) = to_string(columns.at(c).getSerial());//Para MAC
-                            
-                            //   incrementSerial(columns.at(c));
-                            //int inteiro =  my_itoa(columns.at(c).getSerial(), serial );
-                            
                             values.at(c) = intToString(columns.at(c).getSerial());
                             incrementSerial(columns.at(c));
-                            
-                            /*          char *serial;//WINDOWS
-                             itoa(columns.at(c).getSerial(),serial,10);//WINDOWS
-                             values.at(c) = serial;//WINDOWS
-                             incrementSerial(columns.at(c));
-                             */    }
+                        }
                         
-                        //adicionar outras checagens para cada parâmetro aqui
+                        //adicionar outras checagens para cada parâmetro values.at(c) aqui
                         
                         
                     }
@@ -1040,6 +1260,8 @@ bool insert(vector<string> values, string tableName){
     cout << "tabela nao encontrada";
     return false;
 }
+
+
 
 vector<Foreing> getAllFks(){
     vector<Foreing> fks;
@@ -1155,83 +1377,4 @@ bool setForeingKey(Column col, int pk){
         return false;
     }
     
-}
-
-int checkDigit(string palavra){
-    bool res;
-    int flag = 0;
-    if(palavra.at(palavra.length()-1)=='.')
-        return -1;
-    for (int i=0;i<palavra.length();i++){
-        if(flag > 1)
-            return -1;
-        if(palavra.at(i)=='.'){
-            flag++;
-        }else{
-            res = isdigit(palavra.at(i));
-            if(!res)
-                return -1;
-        }
-    }
-    return flag;
-}
-
-bool checkType(string palavra,int type){
-    //integer = 0 | float = 1 | bool = 2 | string = 3 | data = 4 | hora = 5
-    int res;
-    int flag = 0;
-    switch(type){
-        case 0:
-            cout << "Entrou case 0 - integer" << endl;
-            res = checkDigit(palavra);
-            if(res != 0)
-                return false;
-            else
-                return true;
-            break;
-        case 1:
-            cout << "Entrou case 1 - float" << endl;
-            res = checkDigit(palavra);
-            if(res != 1)
-                return false;
-            else
-                return true;
-            break;
-        case 2:
-            cout << "Entrou case 2 - bool" << endl;
-            if((palavra == "0")||(palavra == "1"))
-                return true;
-            else
-                return false;
-            break;
-        case 3:
-            cout << "Entrou case 3 - string" << endl;
-            if(palavra == "\0")
-                return false;
-            for(int i=0;i<palavra.length();i++){
-                if(flag == 1)
-                    return true;
-                if(palavra.at(i)!=' ')
-                    flag = 1;
-            }
-            if(flag ==0)
-                return false;
-            else
-                return true;
-            break;
-        case 4:
-            cout << "Entrou case 4 - data" << endl;
-            if(palavra.length()!=8){
-                return false;
-            }else{
-                return true;
-            }
-            break;
-        case 5:
-            cout <<"Entrou case 5 - hora" << endl;
-            
-            
-            break;
-    }
-    return false;
 }
