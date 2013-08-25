@@ -204,11 +204,11 @@ public:
         this->pk = newPk;
     }
     
-    bool getSerial(){
+    int getSerial(){
         return this->serial;
     }
     
-    void setSerial(bool newSerial){
+    void setSerial(int newSerial){
         this->serial = newSerial;
     }
     
@@ -337,3 +337,8 @@ bool createTable(Table newTable, vector<Column> columns); // cria uma tabela (in
 vector<Foreing> getAllFks(); //retorna todas as primary keys
 
 bool setForeingKey(Column col, int pk); //alter table que seta a foreing key, (coluna da foreing key, ID da primary key)
+
+bool insert(vector<string> values, string tableName); // insert table
+
+bool checkDigit(string palavra);
+
