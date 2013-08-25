@@ -103,7 +103,7 @@ Tablespace checkTablespace(int idTS){
 vector<Database> getAllDatabase(){
 	vector <Database> dbs;
 	if(fileExists(dbpath)){
-		if(log){ cout << "Arquivo de banco de dados ja existe fazendo leitura";}
+		//if(log){ cout << "Arquivo de banco de dados ja existe fazendo leitura";}
 		string line;
 		ifstream file (dbpath);
 		if (file.is_open()){
@@ -366,7 +366,7 @@ string getPathFromDatabase(int dbId){
 vector<Table> getAllTables(){
 	vector <Table> tablesDatas;
 	if(fileExists(tablesPath)){
-		if(log){ cout << "Arquivo de banco de dados ja existe fazendo leitura";}
+		//if(log){ cout << "Arquivo de banco de dados ja existe fazendo leitura";}
 		string line;
 		ifstream file (tablesPath);
 		if (file.is_open()){
@@ -401,7 +401,7 @@ vector<Table> getAllTables(){
 vector<Column> getAllColumns(int newTableId){
 	vector <Column> colDatas;
 	if(fileExists(columnsPath)){
-		if(log){ cout << "Arquivo de banco de dados ja existe fazendo leitura";}
+		//if(log){ cout << "Arquivo de banco de dados ja existe fazendo leitura";}
 		string line;
 		ifstream file (columnsPath);
 		if (file.is_open()){
@@ -412,7 +412,7 @@ vector<Column> getAllColumns(int newTableId){
                     tsline = explode(line, separator);
                     
                     bool pk = atoi(tsline.at(0).c_str());
-                    bool serial = stringIsBool(tsline.at(1));
+                    int serial = atoi(tsline.at(1).c_str());
                     string name = tsline.at(2);
                     int type = atoi(tsline.at(3).c_str());
                     int size = atoi(tsline.at(4).c_str());
@@ -616,6 +616,119 @@ bool createTable(Table newTable, vector<Column> columns){
     return false;
 }
 
+bool incrementSerial(Column col){
+    
+    vector<Column> cols = getAllColumns(-1);
+    for (int c = 0; c < cols.size(); c++) {
+        
+        if ((col.getName().compare(cols.at(c).getName())==0) && (col.gettableId() == cols.at(c).gettableId())) {
+            int serial = cols.at(c).getSerial();
+            if (serial>-1) {
+                serial++;
+                cols.at(c).setSerial(serial);
+                
+                ofstream fileColumn;
+                fileColumn.open(columnsPath);
+                
+                for (int x = 0; x < cols.size(); x++) {
+                    fileColumn << cols.at(x).getPk() << separator << cols.at(x).getSerial() << separator << cols.at(x).getName() << separator << cols.at(x).getType() << separator << cols.at(x).getSize() << separator << cols.at(x).getOptional() << separator << cols.at(x).getFk() << separator << cols.at(x).gettableId() << "\n" ;
+                }
+                
+                fileColumn.close();
+                
+                return true;
+                
+            }else{
+                return false;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+bool insert(vector<string> values, string tableName){
+    vector<Table> tables = getAllTables();
+    for (int t = 0; t < getAllTables().size(); t++) {
+        if (tables.at(t).getName().compare(tableName)==0) {
+            if (tables.at(t).getDatabase()==getDefaultDb().getId()) {
+                int tableId = tables.at(t).getId();
+                vector<Column> columns = getAllColumns(tableId);
+                if (columns.size()==values.size()) {
+                    Table insertTable = tables.at(t);
+                    string tablepath = getPathFromDatabase(getDefaultDb().getId()) + "/" + insertTable.getName() + ".data";
+                    bool validation = true;
+                    
+                    
+                    for (int c = 0; c < columns.size(); c++) {
+                        
+                        if (columns.at(c).getSerial()>-1) {
+                            values.at(c) = to_string(columns.at(c).getSerial());
+                            incrementSerial(columns.at(c));
+                        }
+                        
+                        //adicionar outras checagens para cada parâmetro aqui
+                     
+
+                    }
+                    
+                    ofstream fileColumn;
+                    fileColumn.open(tablepath, std::ofstream::app);
+                    
+                    for (int x = 0; x < values.size(); x++) {
+                        fileColumn << values.at(x);
+                        if (x!=values.size()-1) {
+                            fileColumn << separator;
+                        }
+                    }
+                    fileColumn << "\n";
+                    fileColumn.close();
+                    
+                    //cout << "increment " << columns.at(0).getName() << endl;
+                    
+                    
+                    //incrementSerial(columns.at(0));
+                    
+                    
+                    /*
+                     
+                     string line;
+                     ifstream file (fksPath);
+                     if (file.is_open()){
+                     while ( file.good() ){
+                     getline (file,line);
+                     if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
+                     vector <string> pkline;
+                     pkline = explode(line, separator);
+                     
+                     int id = atoi(pkline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
+                     int fk = atoi(pkline.at(1).c_str());//CONVERTE STRING PARA INTEIRO
+                     
+                     Foreing newforeing(id, fk);
+                     fks.push_back(newforeing);
+                     }
+                     }
+                     
+                     file.close();
+                     
+                     
+                     */
+                    
+                   // cout << tablepath;
+                    return true;
+
+                }else{
+                    cout << "numero de colunas não corresponde ao numero de colunas da tabela" << endl;
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+    cout << "tabela nao encontrada";
+    return false;
+}
+
 vector<Foreing> getAllFks(){
     vector<Foreing> fks;
     if (fileExists(fksPath)) {
@@ -716,8 +829,6 @@ bool setForeingKey(Column col, int pk){
                             return true;
                         }
                     }
-                    
-                    
                 }
                 if(log){ cout << "Saiu do FOR das colunas, Coluna inexistente" << endl;}
                 return false;
@@ -732,5 +843,9 @@ bool setForeingKey(Column col, int pk){
         return false;
     }
     
+}
+
+bool checkDigit(string palavra){
+    return false;
 }
 
