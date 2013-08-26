@@ -97,7 +97,7 @@ int main() {
      Column dataLocacao(false, -1, "dataLocacao", 4, 8, false, -1, -1);
      Column horaLocacao(false, -1, "horaLocacao", 59, 6, true, -1, -1);
     
-     
+     C
      colunasTabelalocacao.push_back(idLocacao);
      colunasTabelalocacao.push_back(idFilmeLocacao);
      colunasTabelalocacao.push_back(idClienteLocacao);
@@ -122,7 +122,7 @@ int main() {
      vector<string> values;
      values.push_back("01");
      values.push_back("02");
-     values.push_back("03");
+     values.push_back("4");
      values.push_back("1");
      values.push_back("50.00");
      values.push_back("20120810");
