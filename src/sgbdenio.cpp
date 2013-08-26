@@ -300,7 +300,33 @@ public:
     }
 };
 
-
+class Condition{
+private:
+    string colName;
+    string operatorType;
+    string value;
+public:
+    string setColName(){
+        return this->colName;
+    }
+    string getColName(){
+        return this->colName;
+    }
+    
+    string setOperatorType(){
+        return this->operatorType;
+    }
+    string getOperatorType(){
+        return this->operatorType;
+    }
+    
+    string setValue(){
+        return this->value;
+    }
+    string getValue(){
+        return this->value;
+    }
+};
 
 int checkDigit(string palavra){
     bool res;
@@ -935,6 +961,125 @@ vector <Primary> getAllPrimary(int idPrimary){
     
 }
 
+
+
+vector<Foreing> getAllFks(){
+    vector<Foreing> fks;
+    if (fileExists(fksPath)) {
+        string line;
+		ifstream file (fksPath);
+		if (file.is_open()){
+            while ( file.good() ){
+		    	getline (file,line);
+		        if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
+                    vector <string> pkline;
+                    pkline = explode(line, separator);
+                    
+                    int id = atoi(pkline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
+                    int fk = atoi(pkline.at(1).c_str());//CONVERTE STRING PARA INTEIRO
+                    
+                    Foreing newforeing(id, fk);
+                    fks.push_back(newforeing);
+                }
+		    }
+            
+            file.close();
+            return fks;
+        }else{
+            return fks;
+        }
+        return fks;
+    }
+    return fks;
+}
+
+bool setForeingKey(Column col, int pk){
+    
+    if (pk != -1){
+        vector <Primary> pkData = getAllPrimary(-1);
+        for (int x=0; x<pkData.size();x++){
+            if (pk == pkData.at(x).getId()){
+                if (log) {cout << "ID " << pk <<" existe na tabela PK.data" << endl;}
+                vector <Column> columnData = getAllColumns(-1);
+                for(int x1=0;x1<columnData.size();x1++){
+                    if (col.getName() == columnData.at(x1).getName()){
+                        if (log) { cout << "Coluna "<<col.getName() << " existe no arquivo Columns.data." << endl;}
+                        if (fileExists(fksPath)){//Se o arquivo existe faz uma destas duas coisas
+                            vector<Foreing> fks = getAllFks();
+                            if (columnData.at(x1).getFk()== -1){
+                                if (log) {cout << "Coluna ainda sem FK setada" << endl;}
+                                int newFkId = fks.at(fks.size()-1).getId()+1;
+                                if (log) { cout << "Novo id FK: " << newFkId << endl;}
+                                Foreing newFK(newFkId,pk);
+                                fks.push_back(newFK);
+                                ofstream filefks;
+                                filefks.open(fksPath);
+                                for(int x2=0;x2<fks.size();x2++){
+                                    filefks << fks.at(x2).getId() << separator << fks.at(x2).getFk() << "\n";
+                                }
+                                filefks.close();
+                                ofstream fileC;
+                                fileC.open(columnsPath);
+                                for (int x2=0;x2<columnData.size();x2++){
+                                    if(columnData.at(x1).getName() == columnData.at(x2).getName()){
+                                        columnData.at(x2).setFk(newFkId);
+                                    }
+                                    fileC << columnData.at(x2).getPk() << separator << columnData.at(x2).getSerial() << separator << columnData.at(x2).getName() << separator << columnData.at(x2).getType() << separator << columnData.at(x2).getSize() << separator << columnData.at(x2).getOptional() << separator << columnData.at(x2).getFk() << separator << columnData.at(x2).gettableId() << "\n" ;
+                                }
+                                filefks.close();
+                                return true;
+                                
+                            }else{
+                                if (log) {cout << "Coluna com FK setada, valor deve ser mudado em FK Data" << endl;}
+                                vector<Foreing> fks = getAllFks();
+                                ofstream filefks;
+                                filefks.open(fksPath);
+                                for (int i=0;i<fks.size();i++){
+                                    if (fks.at(i).getId() == columnData.at(x1).getFk()){
+                                        fks.at(i).setFk(pk);
+                                    }
+                                    filefks << fks.at(i).getId() << separator << fks.at(i).getFk() << "\n" ;
+                                }
+                                filefks.close();
+                                return true;
+                            }
+                            
+                            
+                        }else{//Senão cria o arquivo
+                            if (log) {cout << "Arquivo FK.DATA inexistente. Sendo criado..."<<endl;}
+                            ofstream filefks;
+                            filefks.open(fksPath);
+                            filefks << 0 << separator << pk << "\n" ;
+                            filefks.close();
+                            ofstream fileC;
+                            fileC.open(columnsPath);
+                            for (int x2=0;x2<columnData.size();x2++){
+                                if(columnData.at(x1).getName() == columnData.at(x2).getName()){
+                                    columnData.at(x2).setFk(0);
+                                }
+                                fileC << columnData.at(x2).getPk() << separator << columnData.at(x2).getSerial() << separator << columnData.at(x2).getName() << separator << columnData.at(x2).getType() << separator << columnData.at(x2).getSize() << separator << columnData.at(x2).getOptional() << separator << columnData.at(x2).getFk() << separator << columnData.at(x2).gettableId() << "\n" ;
+                            }
+                            filefks.close();
+                            return true;
+                        }
+                    }
+                }
+                if(log){ cout << "Saiu do FOR das colunas, Coluna inexistente" << endl;}
+                return false;
+            }
+            
+            
+        }
+        if(log){  cout << "Saiu do FOR das primary keys, PK inexistente" << endl;}
+        return false;
+        
+    }else {
+        return false;
+    }
+    
+}
+
+
 bool createTable(Table newTable, vector<Column> columns){
     vector<Database> dbs;
     dbs = getAllDatabase();
@@ -1108,7 +1253,7 @@ vector<string> getColFromTable(string tablePath, int tableIndex){
     return selectCols;
 }
 
-vector<vector<string> > select(vector<string> parameters, string tableName, vector<string> where){
+vector<vector<string> > select(vector<string> parameters, string tableName, vector<Condition> where){
     vector <vector<string> > select;
     
     vector<Table> tables = getAllTables();
@@ -1217,6 +1362,75 @@ bool insert(vector<string> values, string tableName){
                         
                         }
                         
+                        if (columns.at(c).getPk()) {
+                            vector<string> parametros;
+                            parametros.push_back(columns.at(c).getName());
+                            vector<Condition> where;
+                            
+                            vector<vector<string> > selectResult = select(parametros, tableName, where);
+                            
+                            
+                            for (int tuple = 0 ; tuple<selectResult.size(); tuple++) {
+                                for (int col = 0; col<selectResult.at(tuple).size(); col++) {
+                                    if(selectResult.at(tuple).at(col).compare(values.at(c))==0) {
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if (columns.at(c).getFk()!=-1) {
+                            vector<Foreing> fks = getAllFks();
+                            for (int f = 0; f<fks.size(); f++) {
+                                if (fks.at(f).getId()==columns.at(c).getFk()) {
+                                    vector<Primary> pks= getAllPrimary(fks.at(f).getFk());
+                                    if (pks.size()>0) {
+                                        string nomeCampo = pks.at(0).getName();
+                                        string nomeTabela = pks.at(0).getTable();
+                                        vector<string> parametrospk;
+                                        vector<Condition> where;
+                                        parametrospk.push_back(nomeCampo);
+                                        
+                                        
+                                        vector<vector<string> > selectResult = select(parametrospk, nomeTabela, where);
+                                        cout << "tamanho: " << selectResult.size() << endl;
+                                        if (selectResult.size()==0) {
+                                            return false;
+                                        }else{
+                                            
+                                            bool validationfk = false;
+                                            
+                                            for (int tuple = 0 ; tuple<selectResult.size(); tuple++) {
+                                                //for (int col = 0; col<selectResult.at(tuple).size(); col++) {
+                                                cout << "lendo " << selectResult.at(tuple).at(0) << endl;
+                                                    if(selectResult.at(tuple).at(0).compare(values.at(c))==0) {
+                                                        validationfk = true;
+                                                        cout << "encontrou " << selectResult.at(tuple).at(0) << endl;
+                                                        break;
+                                                    }
+                                                    cout << "naoc" << endl;
+                                                //}
+                                                if(validationfk){
+                                                    cout << "aqui validationfk " << validationfk << endl;
+                                                    validation = true;
+                                                    break;
+                                                    
+                                                }
+                                                
+                                            cout << "1 Primary key ainda não encontrada" << endl;
+                                            }
+                                        }
+                                    }else{
+                                        cout << "nao há fk com aquele id" << endl;
+                                    }
+                                }
+                            }
+                        
+                        }
+                        
+                    
+                        
+                        
                         //FIM VALIDAÇÃO CAMPOS
                     }
                     if (validation) {
@@ -1230,6 +1444,9 @@ bool insert(vector<string> values, string tableName){
                         }
                         fileColumn << "\n";
                         fileColumn.close();
+                    }else{
+                        cout << ">>>false" << endl;
+                        return false;
                     }
                     
                     //cout << "increment " << columns.at(0).getName() << endl;
@@ -1277,120 +1494,3 @@ bool insert(vector<string> values, string tableName){
     return false;
 }
 
-
-
-vector<Foreing> getAllFks(){
-    vector<Foreing> fks;
-    if (fileExists(fksPath)) {
-        string line;
-		ifstream file (fksPath);
-		if (file.is_open()){
-            while ( file.good() ){
-		    	getline (file,line);
-		        if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
-                    vector <string> pkline;
-                    pkline = explode(line, separator);
-                    
-                    int id = atoi(pkline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
-                    int fk = atoi(pkline.at(1).c_str());//CONVERTE STRING PARA INTEIRO
-                    
-                    Foreing newforeing(id, fk);
-                    fks.push_back(newforeing);
-                }
-		    }
-            
-            file.close();
-            return fks;
-        }else{
-            return fks;
-        }
-        return fks;
-    }
-    return fks;
-}
-
-bool setForeingKey(Column col, int pk){
-    
-    if (pk != -1){
-        vector <Primary> pkData = getAllPrimary(-1);
-        for (int x=0; x<pkData.size();x++){
-            if (pk == pkData.at(x).getId()){
-                if (log) {cout << "ID " << pk <<" existe na tabela PK.data" << endl;}
-                vector <Column> columnData = getAllColumns(-1);
-                for(int x1=0;x1<columnData.size();x1++){
-                    if (col.getName() == columnData.at(x1).getName()){
-                        if (log) { cout << "Coluna "<<col.getName() << " existe no arquivo Columns.data." << endl;}
-                        if (fileExists(fksPath)){//Se o arquivo existe faz uma destas duas coisas
-                            vector<Foreing> fks = getAllFks();
-                            if (columnData.at(x1).getFk()== -1){
-                                if (log) {cout << "Coluna ainda sem FK setada" << endl;}
-                                int newFkId = fks.at(fks.size()-1).getId()+1;
-                                if (log) { cout << "Novo id FK: " << newFkId << endl;}
-                                Foreing newFK(newFkId,pk);
-                                fks.push_back(newFK);
-                                ofstream filefks;
-                                filefks.open(fksPath);
-                                for(int x2=0;x2<fks.size();x2++){
-                                    filefks << fks.at(x2).getId() << separator << fks.at(x2).getFk() << "\n";
-                                }
-                                filefks.close();
-                                ofstream fileC;
-                                fileC.open(columnsPath);
-                                for (int x2=0;x2<columnData.size();x2++){
-                                    if(columnData.at(x1).getName() == columnData.at(x2).getName()){
-                                        columnData.at(x2).setFk(newFkId);
-                                    }
-                                    fileC << columnData.at(x2).getPk() << separator << columnData.at(x2).getSerial() << separator << columnData.at(x2).getName() << separator << columnData.at(x2).getType() << separator << columnData.at(x2).getSize() << separator << columnData.at(x2).getOptional() << separator << columnData.at(x2).getFk() << separator << columnData.at(x2).gettableId() << "\n" ;
-                                }
-                                filefks.close();
-                                return true;
-                                
-                            }else{
-                                if (log) {cout << "Coluna com FK setada, valor deve ser mudado em FK Data" << endl;}
-                                vector<Foreing> fks = getAllFks();
-                                ofstream filefks;
-                                filefks.open(fksPath);
-                                for (int i=0;i<fks.size();i++){
-                                    if (fks.at(i).getId() == columnData.at(x1).getFk()){
-                                        fks.at(i).setFk(pk);
-                                    }
-                                    filefks << fks.at(i).getId() << separator << fks.at(i).getFk() << "\n" ;
-                                }
-                                filefks.close();
-                                return true;
-                            }
-                            
-                            
-                        }else{//Senão cria o arquivo
-                            if (log) {cout << "Arquivo FK.DATA inexistente. Sendo criado..."<<endl;}
-                            ofstream filefks;
-                            filefks.open(fksPath);
-                            filefks << 0 << separator << pk << "\n" ;
-                            filefks.close();
-                            ofstream fileC;
-                            fileC.open(columnsPath);
-                            for (int x2=0;x2<columnData.size();x2++){
-                                if(columnData.at(x1).getName() == columnData.at(x2).getName()){
-                                    columnData.at(x2).setFk(0);
-                                }
-                                fileC << columnData.at(x2).getPk() << separator << columnData.at(x2).getSerial() << separator << columnData.at(x2).getName() << separator << columnData.at(x2).getType() << separator << columnData.at(x2).getSize() << separator << columnData.at(x2).getOptional() << separator << columnData.at(x2).getFk() << separator << columnData.at(x2).gettableId() << "\n" ;
-                            }
-                            filefks.close();
-                            return true;
-                        }
-                    }
-                }
-                if(log){ cout << "Saiu do FOR das colunas, Coluna inexistente" << endl;}
-                return false;
-            }
-            
-            
-        }
-        if(log){  cout << "Saiu do FOR das primary keys, PK inexistente" << endl;}
-        return false;
-        
-    }else {
-        return false;
-    }
-    
-}
