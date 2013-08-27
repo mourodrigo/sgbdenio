@@ -15,7 +15,7 @@
 int main() {
     
     /*
-     
+    
      // ======= TABLESPACE =======
      
      //AO CRIAR A PRIMEIRA TABLESPACE TAMBÉM SERÁ CRIADA UMA TABLESPACE PADRÃO NO DIRETÓRIO RAIZ
@@ -106,29 +106,31 @@ int main() {
      colunasTabelalocacao.push_back(dataLocacao);
      colunasTabelalocacao.push_back(horaLocacao);
      createTable(tabelalocacao, colunasTabelalocacao);
-     
+    */
+    
      // ======= FOREING KEY =======
-     
-     
-     Column idClientefk(true, 0, "nomeCliente", 0, 10, false, -1, 1); //cria foreing key para nomeCliente
-     setForeingKey(idCliente, 0);
+    
+    /*
+    
+     Column idClientefk(true, 0, "idCliente", 0, 10, false, -1, 1); //cria foreing key para nomeCliente
+     setForeingKey(idClientefk, 0);
      
      */
     
     // ======= INSERT =======
     
     //inserindo na tabela
-     /*
+    /*
      vector<string> values;
      values.push_back("999");
-     values.push_back("03");
-     values.push_back("1");        
-     values.push_back("0");          
-     values.push_back("30.20");
-     values.push_back("20080812");
-     values.push_back("074500");
+     values.push_back("NULL");
+     values.push_back("1123");        
+     values.push_back("");
+     //values.push_back("30.20");
+     //values.push_back("20080812");
+     //values.push_back("074500");
      
-     insert(values, "locacao");
+     insert(values, "cliente");
      */
     
     //    string palavra = "19000";
