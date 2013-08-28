@@ -958,9 +958,24 @@ bool setForeingKey(Column col, int pk){//Função que seta uma Foreign Key
         vector <Primary> pkData = getAllPrimary(-1);
         for (int x=0; x<pkData.size();x++){//Percorre o vector de Primary
             if (pk == pkData.at(x).getId()){//Checa se o ID existe
-                vector <Column> columnData = getAllColumns(-1);//Requisita um vector de todas as colunas
+                vector <Table> tables = getAllTables();
+                
+                string tableName;
+                int tableid = -1;
+                for (int ts = 0; ts<tables.size(); ts++) {            //Verifica se a primary key não aponta para ela mesma
+                    if (tables.at(ts).getId() == col.gettableId()) {
+                        tableName = tables.at(ts).getName();
+                        tableid = tables.at(ts).getId();
+                    }
+                }
+                if (pkData.at(x).getTable().compare(tableName)==0) {
+                    if(log){ cout << "Uma foreing_key não pode apontar para ela mesma" << endl; }
+                    return false;
+                }
+                
+                vector <Column> columnData = getAllColumns(tableid);//Requisita um vector de todas as colunas
                 for(int x1=0;x1<columnData.size();x1++){//Percorre o vector de Column
-                    if (col.getName() == columnData.at(x1).getName()){//Verifica se a column existe
+                    if (col.getName().compare(columnData.at(x1).getName())==0 && columnData.at(x1).gettableId() ==col.gettableId()){//Verifica se a column existe
                         if (col.getType()==columnData.at(x1).getType() && col.getSize()==columnData.at(x1).getSize()){//Verifica se o tamanho e o tipo são compatíveis
                             if (fileExists(fksPath)){//Se o arquivo existe faz uma destas duas coisas
                                 vector<Foreing> fks = getAllFks();//Requisita todas FKS já setadas
@@ -974,14 +989,18 @@ bool setForeingKey(Column col, int pk){//Função que seta uma Foreign Key
                                         filefks << fks.at(x2).getId() << separator << fks.at(x2).getFk() << "\n";//Grava no arquivo fks.data
                                     }
                                     filefks.close();
+                                    
+                                    vector<Column> colsData = getAllColumns(-1);
+                                    
                                     ofstream fileC;
                                     fileC.open(columnsPath);//Abre o arquivo columns.data
-                                    for (int x2=0;x2<columnData.size();x2++){
-                                        if(columnData.at(x1).getName() == columnData.at(x2).getName()){//Se a coluna percorrida é igual a requisitada, então atualiza o valor de FK para o ID do novo objeto Foreign
-                                            columnData.at(x2).setFk(newFkId);
+                                    
+                                    for (int x2=0;x2<colsData.size();x2++){
+                                        if(columnData.at(x1).getName().compare(colsData.at(x2).getName())==0 && colsData.at(x2).gettableId() == col.gettableId()){//Se a coluna percorrida é igual a requisitada, então atualiza o valor de FK para o ID do novo objeto Foreign
+                                            colsData.at(x2).setFk(newFkId);
                                         }
                                         //Grava no arquivo columns.data
-                                        fileC << columnData.at(x2).getPk() << separator << columnData.at(x2).getSerial() << separator << columnData.at(x2).getName() << separator << columnData.at(x2).getType() << separator << columnData.at(x2).getSize() << separator << columnData.at(x2).getOptional() << separator << columnData.at(x2).getFk() << separator << columnData.at(x2).gettableId() << "\n" ;
+                                        fileC << colsData.at(x2).getPk() << separator << colsData.at(x2).getSerial() << separator << colsData.at(x2).getName() << separator << colsData.at(x2).getType() << separator << colsData.at(x2).getSize() << separator << colsData.at(x2).getOptional() << separator << colsData.at(x2).getFk() << separator << colsData.at(x2).gettableId() << "\n" ;
                                     }
                                     filefks.close();
                                     return true;
@@ -1005,14 +1024,18 @@ bool setForeingKey(Column col, int pk){//Função que seta uma Foreign Key
                                 filefks.open(fksPath);//Grava no arquivo fks.data a nova ocorrencia da FK
                                 filefks << 0 << separator << pk << "\n" ;
                                 filefks.close();
+                                
+                                vector<Column> colsData = getAllColumns(-1);
+                                
                                 ofstream fileC;
                                 fileC.open(columnsPath);
-                                for (int x2=0;x2<columnData.size();x2++){//Percorre o vetor de colunas
-                                    if(columnData.at(x1).getName() == columnData.at(x2).getName()){//Grava o novo ID da FK na coluna referente
-                                        columnData.at(x2).setFk(0);
+                                
+                                for (int x2=0;x2<colsData.size();x2++){//Percorre o vetor de colunas
+                                    if(columnData.at(x1).getName().compare(colsData.at(x2).getName())==0 && colsData.at(x2).gettableId() == col.gettableId()){//Grava o novo ID da FK na coluna referente
+                                        colsData.at(x2).setFk(0);
                                     }
                                     //Grava no arquivo columns.data os novos dados atualizados
-                                    fileC << columnData.at(x2).getPk() << separator << columnData.at(x2).getSerial() << separator << columnData.at(x2).getName() << separator << columnData.at(x2).getType() << separator << columnData.at(x2).getSize() << separator << columnData.at(x2).getOptional() << separator << columnData.at(x2).getFk() << separator << columnData.at(x2).gettableId() << "\n" ;
+                                    fileC << colsData.at(x2).getPk() << separator << colsData.at(x2).getSerial() << separator << colsData.at(x2).getName() << separator << colsData.at(x2).getType() << separator << colsData.at(x2).getSize() << separator << colsData.at(x2).getOptional() << separator << colsData.at(x2).getFk() << separator << colsData.at(x2).gettableId() << "\n" ;
                                 }
                                 filefks.close();
                                 return true;
@@ -1742,12 +1765,12 @@ bool setDefaultDb(Database defaultDb){
             }
         }
         if (updateOld && updateNew){
-        ofstream file;
-        file.open(dbpath);
-        for (int x = 0; x<dbs.size(); x++){//Grava no arquivo
-    		file << dbs.at(x).getId() << separator << dbs.at(x).getName() << separator << dbs.at(x).getTablespace()  << separator << dbs.at(x).getDefault() << "\n";
-        }
-        file.close();
+            ofstream file;
+            file.open(dbpath);
+            for (int x = 0; x<dbs.size(); x++){//Grava no arquivo
+                file << dbs.at(x).getId() << separator << dbs.at(x).getName() << separator << dbs.at(x).getTablespace()  << separator << dbs.at(x).getDefault() << "\n";
+            }
+            file.close();
             return true;
         }else{
             return false;
