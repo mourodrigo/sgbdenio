@@ -1834,6 +1834,6 @@ bool dropTable(string tableName){//Função que força a remoção de uma tabela
     filepks.close();
     
     return true;
-    
+//fim
 }
 
