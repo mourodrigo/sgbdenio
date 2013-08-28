@@ -1781,4 +1781,59 @@ bool setDefaultDb(Database defaultDb){
     return false;
 }
 
+bool dropTable(string tableName){//Função que força a remoção de uma tabela, podendo implicar no mal funcionamento do banco
+    string line;
+    vector <Table> tableReaded = getAllTables();
+    Table tableDrop(-1,"",-1);
+    for(int i=0;i<tableReaded.size();i++){
+        if(tableReaded.at(i).getName().compare(tableName)==0){//Monta um objeto tabela quando encontrar o nome igual ao que foi recebido
+            tableDrop.setId(tableReaded.at(i).getId());
+            tableDrop.setName(tableReaded.at(i).getName());
+            tableDrop.setDatabase(tableReaded.at(i).getDatabase());
+        }
+    }
+    
+    string tablepath = getPathFromDatabase(tableDrop.getDatabase())+"/"+tableDrop.getName()+".data";
+    remove(tablepath.c_str());//Deleta o arquivo da tabela
+    
+    //Regrava tables.data, columns.data e pks.data com seus valores antigos, menos aquele que será excluido
+    ofstream fileTables;
+    fileTables.open(tablesPath);//Abre o arquivo tables.data
+    for (int x = 0; x< tableReaded.size();x++){//Grava no arquivo tables.data
+        if(tableReaded.at(x).getId()==tableDrop.getId()){
+            
+        }else{
+            fileTables << tableReaded.at(x).getId() << separator << tableReaded.at(x).getName() << separator << tableReaded.at(x).getDatabase() << "\n" ;
+        }
+    }
+    fileTables.close();
+    
+    vector <Column> columnsReaded = getAllColumns(-1);//Requisita todas as colunas existentes
+    ofstream fileColumn;
+    fileColumn.open(columnsPath);//Abre o arquivo columns.data
+    for (int x = 0; x < columnsReaded.size(); x++) {
+        if(columnsReaded.at(x).gettableId()==tableDrop.getId()){
+            
+        }else{
+            fileColumn << columnsReaded.at(x).getPk() << separator << columnsReaded.at(x).getSerial() << separator << columnsReaded.at(x).getName() << separator << columnsReaded.at(x).getType() << separator << columnsReaded.at(x).getSize() << separator << columnsReaded.at(x).getOptional() << separator << columnsReaded.at(x).getFk() << separator << columnsReaded.at(x).gettableId() << "\n" ;
+        }
+    }
+    fileColumn.close();
+    
+    vector <Primary> primaryReaded;
+    primaryReaded = getAllPrimary(-1);//Requisita todas as primary keys existentes
+    ofstream filepks;
+    filepks.open(pksPath);//Abre o arquivo pks.data e atualiza com os novos valores
+    for(int x=0;x<primaryReaded.size();x++){
+        if(primaryReaded.at(x).getTable().compare(tableDrop.getName())==0){
+            
+        }else{
+            filepks << primaryReaded.at(x).getId() << separator << primaryReaded.at(x).getName() << separator << primaryReaded.at(x).getTable() << separator << primaryReaded.at(x).getOrder() << "\n" ;
+        }
+    }
+    filepks.close();
+    
+    return true;
+    
+}
 
