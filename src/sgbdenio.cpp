@@ -526,7 +526,6 @@ bool fileExists(const char *filename){ //Verifica se arquivo existe
 #pragma mark -sgbd
 Tablespace checkTablespace(int idTS){//Função que verifica se uma tablespace existe e retorna os dados dela
 
-    if(log){cout << "Tablespace encontrada." << endl;}
     string line;
     ifstream file (tspath);
     if (file.is_open()){
@@ -559,7 +558,6 @@ Tablespace checkTablespace(int idTS){//Função que verifica se uma tablespace e
 vector<Database> getAllDatabase(){//Função que retorna todos os banco de dados cadastrados
 	vector <Database> dbs;
 	if(fileExists(dbpath)){
-		if(log){ cout << "Arquivo database.data ja existe, fazendo leitura..."<<endl;}
 		string line;
 		ifstream file (dbpath);
 		if (file.is_open()){
@@ -600,6 +598,12 @@ bool createDatabase(Database newdb){//Função que cria um Banco de Dados
 	if(fileExists(dbpath)){//Se o arquivo database.data já existe, então cria um vector com os Database existente
 		vector <Database> dbs;
 	    dbs = getAllDatabase();
+       for(int i=0;i<dbs.size();i++){
+            if((newdb.getName().compare(dbs.at(i).getName())==0)&&(newdb.getTablespace()==dbs.at(i).getTablespace())){
+                if(log){cout<<"Database "<<newdb.getName()<<" ja existente na tablespace com id"<<dbs.at(i).getTablespace()<<endl;}
+                return false;
+            }
+       }
        if(newdb.getDefault()){
             for (int x = 0; x<dbs.size(); x++){
             	if(dbs.at(x).getDefault()){
@@ -611,16 +615,19 @@ bool createDatabase(Database newdb){//Função que cria um Banco de Dados
     	if(newdb.getTablespace() == 0){//Se o novo banco pertence a tablespace default, entra aqui para definir seu diretório de criação
     		location = tsdefault + "/" + newdb.getName();
     		result = MKDIR(location.c_str());
-    		if (result == -1)//Se não foi possível criar o diretório, retorna erro
+    		if (result == -1){//Se não foi possível criar o diretório, retorna erro
+                if(log){cout<<"Nao foi possivel criar a pasta do banco de dados: "<<newdb.getName()<<endl;}
                 return false;
+    		}
         }else{//Senão verifica qual Tablespace que é
             Tablespace tsReturn = checkTablespace(newdb.getTablespace());//Verifica se a tablespace existe
             if(tsReturn.getId() != -1){//Se for diferente de -1 então cria seta o caminho do novo banco
-                if(log){ cout << "Tablespace encontrada" << endl;}
                 location = tsReturn.getLocation()+"/"+newdb.getName();
                 result = MKDIR(location.c_str());
-                if (result == -1)//Se não foi possível criar o diretório, retorna erro
+                if (result == -1){//Se não foi possível criar o diretório, retorna erro
+                    if(log){cout<<"Nao foi possivel criar a pasta do banco de dados: "<<newdb.getName()<<endl;}
                     return false;
+                }
             }else{//Se o getId retornado da tablespace for -1, então ela não foi encontrada
                 if(log){ cout << "Tablespace nao encontrada" << endl;}
                 return false;
@@ -637,21 +644,25 @@ bool createDatabase(Database newdb){//Função que cria um Banco de Dados
         file.close();
         return true;
 	}else{//Se o arquivo database.data não existe, então está sendo criado o primeiro banco
+	    if(log){cout<<"Arquivo database.data nao existe, sendo criado..."<<endl;}
 	    ofstream file;
 		file.open(dbpath);
         if(newdb.getTablespace() == 0){//Se a TS do novo banco for a default então entra aqui
     		location = tsdefault + "/" + newdb.getName();
     		result = MKDIR(location.c_str());
-    		if (result == -1)//Se não foi possível criar o diretório, retorna erro
+    		if (result == -1){//Se não foi possível criar o diretório, retorna erro
+                if(log){cout<<"Nao foi possivel criar a pasta do banco de dados: "<<newdb.getName()<<endl;}
                 return false;
+    		}
         }else{
             Tablespace tsReturn = checkTablespace(newdb.getTablespace());
             if(tsReturn.getId() != -1){//Se o ID retornado for diferente de -1
-                if(log){  cout << "Tablespace encontrada" << endl;}
                 location = tsReturn.getLocation()+"/"+newdb.getName();
                 result = MKDIR(location.c_str());
-                if (result == -1)//Se não foi possível criar o diretório, retorna erro
+                if (result == -1){//Se não foi possível criar o diretório, retorna erro
+                    if(log){cout<<"Nao foi possivel criar a pasta do banco de dados: "<<newdb.getName()<<endl;}
                     return false;
+                }
             }else{//Se o ID retornado for -1 então a TS não foi encontrada
                 if(log){  cout << "Tablespace nao encontrada" << endl;}
                 return false;
@@ -661,8 +672,7 @@ bool createDatabase(Database newdb){//Função que cria um Banco de Dados
 		file << 0 << separator << newdb.getName() << separator << newdb.getTablespace()  << separator << 1 << "\n";
 		file.close();
 
-        if(log){cout << "Banco de dados " << newdb.getName() << " com id 0 no diretorio: \n " << newdb.getTablespace() << "\n  default 1 " << endl;} //inserção no arquivo esta ok
-		return true;
+        return true;
 	}
 }
 
@@ -676,13 +686,12 @@ Database getDefaultDb(){//Função que verifica no arquivo database.data qual é
             }
         }
     }
-    return  Database(-1, "", -1, false); //nao consigo retornar null
+    return  Database(-1, "", -1, false);
 }
 
 vector<Tablespace> getAllTableSpace(){//Função que retorna um objeto Tablespace com todas as Tablespaces existentes no arquivo tablespace.data
 	vector <Tablespace> tsData;
 	if(fileExists(tspath)){
-		if(log){cout << "Arquivo tablespace.data ja existe fazendo leitura";}
 		string line;
 		ifstream file (tspath);
 		if (file.is_open()){
@@ -716,13 +725,11 @@ bool createTableSpace(Tablespace newts){//Função que cria uma Tablespace no ba
     int result;
     ofstream file;
     if (fileExists(tspath)){//Se o arquivo existir entra entra nessa condição
-        if(log){  cout << "Arquivo DATA da Tablespace existe" << endl;}
         vector <Tablespace> tsData;
         tsData = getAllTableSpace();//Pega todas as tablespaces existentes no arquivo
-        if(log){ cout <<"Tamanho do vetor TS de retorno: "<< tsData.size() << endl;}
         for (int i=0; i<tsData.size();i++){
             if(newts.getName() == tsData.at(i).getName()){//Se o nome for igual a um ja existente, não cria
-                if(log){ cout << "Tablespace já existe" << endl;}
+                if(log){ cout << "Tablespace ja existe" << endl;}
                 return false;
             }
         }
@@ -744,10 +751,11 @@ bool createTableSpace(Tablespace newts){//Função que cria uma Tablespace no ba
             file.close();
             return true;
         }else if(result == -1){//Se não foi possível criar o diretório então retorna false
+            if(log){cout<<"Nao foi possivel criar o diretorio da tablespace"<<endl;}
             return false;
         }
     }else{//Se o arquivo tablespace.data não existir então será criado
-        if(log){ cout << "Arquivo DATA da TableSpace nao existe" << endl;}
+        if(log){ cout << "Arquivo tablespace.data nao existe,sendo criado" << endl;}
         Tablespace tsdef(0,"default",getCurrentPath()+"/ts_default");//Cria a tablespace default antes de criar a tablespace requerida pelo usuário
         MKDIR(tsdef.getLocation().c_str());//Cria a tablespace default no diretório onde o programa está rodando
         file.open(tspath);
@@ -763,15 +771,16 @@ bool createTableSpace(Tablespace newts){//Função que cria uma Tablespace no ba
 		if(result == 0){//Se foir possível criar a pasta
             return true;
         }else if(result == -1){//Se não foi possível criar a pasta
+            if(log){cout<<"Nao foi possivel criar o diretorio da tablespace"<<endl;}
             return false;
         }
     }
+    if(log){cout<<"Chegou ao fim da funcao de criar tablespace e nao entrou nas condicoes anteriores."<<endl;}
     return false;
 }
 
 string getPathFromTableSpace(int idTs){//Função que retorna o caminho para a tablespace recebida como parametro
     vector <Tablespace> tbs = getAllTableSpace();
-
     for (int x = 0; x < tbs.size(); x++) {
         if (tbs.at(x).getId()==idTs) {
             return tbs.at(x).getLocation();
@@ -797,7 +806,6 @@ string getPathFromDatabase(int dbId){//Função que retorna o caminho para um ba
 vector<Table> getAllTables(){//Função que retorna um objeto Table com os dados da tabelas existentes no tables.data
 	vector <Table> tablesDatas;
 	if(fileExists(tablesPath)){
-		if(log){ cout << "Arquivo tables.data ja existe, fazendo leitura...";}
 		string line;
 		ifstream file (tablesPath);
 		if (file.is_open()){//Se o arquivo for aberto com sucesso
@@ -830,7 +838,6 @@ vector<Table> getAllTables(){//Função que retorna um objeto Table com os dados
 vector<Column> getAllColumns(int newTableId){//Função que retorna as colunas de uma tabela, se o id recebido for -1, retorna todas colunas
 	vector <Column> colDatas;
 	if(fileExists(columnsPath)){//Se o arquivo existir
-		if(log){ cout << "Arquivo columns.data ja existe, fazendo leitura...";}
 		string line;
 		ifstream file (columnsPath);
 		if (file.is_open()){
@@ -860,7 +867,6 @@ vector<Column> getAllColumns(int newTableId){//Função que retorna as colunas d
                     }
                 }
 		    }
-
             file.close();
             return colDatas;
 		}else{//Se der erro ao abrir o arquivo
@@ -876,8 +882,7 @@ vector<Column> getAllColumns(int newTableId){//Função que retorna as colunas d
 vector <Primary> getAllPrimary(int idPrimary){//Função que retorna um objeto Primary pelo seu id, se receber -1 retorna todos
     vector <Primary> primaryDatas;
 	if(fileExists(pksPath)){
-        if(log){ cout << "Arquivo pks.data ja existe, fazendo leitura..."<<endl;}
-		string line;
+        string line;
 		ifstream file (pksPath);
 		if (file.is_open()){
             while ( file.good() ){
@@ -902,7 +907,6 @@ vector <Primary> getAllPrimary(int idPrimary){//Função que retorna um objeto P
                     }
 		        }
 		    }
-
             file.close();
             return primaryDatas;
 		}else{//Se ocorrer erro ao abrir o arquivo
@@ -919,7 +923,6 @@ vector <Primary> getAllPrimary(int idPrimary){//Função que retorna um objeto P
 vector<Foreing> getAllFks(){//Função que retorna todas as FK's existentes
     vector<Foreing> fks;
     if (fileExists(fksPath)){//Se o arquivo existir
-        if(log){ cout << "Arquivo fks.data ja existe, fazendo leitura..."<<endl;}
         string line;
 		ifstream file (fksPath);
 		if (file.is_open()){
@@ -936,7 +939,6 @@ vector<Foreing> getAllFks(){//Função que retorna todas as FK's existentes
                     fks.push_back(newforeing);//Coloca no vector de Foreigns
                 }
 		    }
-
             file.close();
             return fks;
         }else{//Se ocorrer algum erro ao abrir o arquivo
@@ -956,18 +958,14 @@ bool setForeingKey(Column col, int pk){//Função que seta uma Foreign Key
         vector <Primary> pkData = getAllPrimary(-1);
         for (int x=0; x<pkData.size();x++){//Percorre o vector de Primary
             if (pk == pkData.at(x).getId()){//Checa se o ID existe
-                if (log) {cout << "ID " << pk <<" existe na tabela PK.data" << endl;}
                 vector <Column> columnData = getAllColumns(-1);//Requisita um vector de todas as colunas
                 for(int x1=0;x1<columnData.size();x1++){//Percorre o vector de Column
                     if (col.getName() == columnData.at(x1).getName()){//Verifica se a column existe
                         if (col.getType()==columnData.at(x1).getType() && col.getSize()==columnData.at(x1).getSize()){//Verifica se o tamanho e o tipo são compatíveis
-                            if (log) { cout << "Coluna "<<col.getName() << " existe no arquivo Columns.data." << endl;}
                             if (fileExists(fksPath)){//Se o arquivo existe faz uma destas duas coisas
                                 vector<Foreing> fks = getAllFks();//Requisita todas FKS já setadas
                                 if (columnData.at(x1).getFk()== -1){//Se a coluna tem -1 no atributo FK, então ela não tem FK setada ainda
-                                    if (log) {cout << "Coluna ainda sem FK setada" << endl;}
                                     int newFkId = fks.at(fks.size()-1).getId()+1;//Faz o ID da nova ocorrencia ser igual ao último ID + 1
-                                    if (log) {cout << "Novo id FK: " << newFkId << endl;}
                                     Foreing newFK(newFkId,pk);//Cria o objeto FK
                                     fks.push_back(newFK);
                                     ofstream filefks;
@@ -982,13 +980,12 @@ bool setForeingKey(Column col, int pk){//Função que seta uma Foreign Key
                                         if(columnData.at(x1).getName() == columnData.at(x2).getName()){//Se a coluna percorrida é igual a requisitada, então atualiza o valor de FK para o ID do novo objeto Foreign
                                             columnData.at(x2).setFk(newFkId);
                                         }
-                                        //Grava no arquivo clumns.data
+                                        //Grava no arquivo columns.data
                                         fileC << columnData.at(x2).getPk() << separator << columnData.at(x2).getSerial() << separator << columnData.at(x2).getName() << separator << columnData.at(x2).getType() << separator << columnData.at(x2).getSize() << separator << columnData.at(x2).getOptional() << separator << columnData.at(x2).getFk() << separator << columnData.at(x2).gettableId() << "\n" ;
                                     }
                                     filefks.close();
                                     return true;
                                 }else{//Se o valor do atributo FK da coluna for diferente de -1, então somente o arquivo fks.data irá ser atualizado
-                                    if (log) {cout << "Coluna com FK setada, valor deve ser mudado em FK Data" << endl;}
                                     vector<Foreing> fks = getAllFks();//Requere todas as Foreign existentes
                                     ofstream filefks;
                                     filefks.open(fksPath);//Abre o arquivo fks.data
@@ -1051,16 +1048,13 @@ bool createTable(Table newTable, vector<Column> columns){//Função que cria uma
 
     for (int x = 0; x<dbs.size(); x++) {
         if (dbs.at(x).getId()==newTable.getDatabase()) {
-            if (log) {cout <<"Banco selecionado: " << dbs.at(x).getName() << endl;}
             string tablespace = getPathFromTableSpace(dbs.at(x).getId())+"/";//Configura o caminho da tablespace
             string newTablePath = tablespace+dbs.at(x).getName()+"/"+newTable.getName()+".data";//Configura o caminho da nova tabela(caminho do ts + nome do banco + nova tabela)
 
             if (fileExists(tablesPath)){//Se o arquivo tables.path já existir
-                if(log){cout<<"Arquivo tables.data existe, efetuando leitura..."<<endl;}
                 vector <Table> tableReturn;
                 tableReturn = getAllTables();//Requisita todas tabelas existentes
                 for (int x=0;x<tableReturn.size();x++){//Percorre as tabelas existentes
-                    if(log){cout << newTable.getName() << " <> "<< tableReturn.at(x).getName() << endl;}
                     if(newTable.getName() == tableReturn.at(x).getName()){//Se o nome recebido já existir
                         if(log){ cout << "Tabela ja existe" << endl;}
                         return false;
@@ -1081,7 +1075,7 @@ bool createTable(Table newTable, vector<Column> columns){//Função que cria uma
 
                 vector <Column> columnsReaded = getAllColumns(-1);//Requisita todas as colunas existentes
                 for (int x = 0; x < columns.size(); x++) {//Atualiza o valor TableID das colunas com o ID da nova tabela criada
-                    if (log){cout << "fk: "<< columnsReaded.at(x).getFk() << " -- name: " << columnsReaded.at(x).getName()  << " -- optional: " << columnsReaded.at(x).getOptional()  << " -- pk: " << columnsReaded.at(x).getPk()  << " -- serial: " << columnsReaded.at(x).getSerial()  << " -- size: " << columnsReaded.at(x).getSize()  << " -- getid:  " << columnsReaded.at(x).gettableId()  << " -- gettype:  " << columnsReaded.at(x).getType() << endl;}
+                    //if (log){cout << "fk: "<< columnsReaded.at(x).getFk() << " -- name: " << columnsReaded.at(x).getName()  << " -- optional: " << columnsReaded.at(x).getOptional()  << " -- pk: " << columnsReaded.at(x).getPk()  << " -- serial: " << columnsReaded.at(x).getSerial()  << " -- size: " << columnsReaded.at(x).getSize()  << " -- getid:  " << columnsReaded.at(x).gettableId()  << " -- gettype:  " << columnsReaded.at(x).getType() << endl;}
                     columns.at(x).settableId(newTable.getId());
                     columnsReaded.push_back(columns.at(x));
                 }
@@ -1119,7 +1113,7 @@ bool createTable(Table newTable, vector<Column> columns){//Função que cria uma
                 filepks.close();
                 return true;
             }else{//Se o arquivo tables.data não existir
-                if(log){cout<<"Arquivo tables.data não existe, sendo criado..."<<endl;}
+                if(log){cout<<"Arquivo tables.data, columns.data e pks.data nao existem, sendo criados..."<<endl;}
                 ofstream fileTables;
                 fileTables.open(tablesPath);//Cria o arquivo tables.data e grava a primeira ocorrência
                 fileTables << 0 << separator << newTable.getName() << separator << newTable.getDatabase() << "\n" ;
@@ -1162,66 +1156,62 @@ bool createTable(Table newTable, vector<Column> columns){//Função que cria uma
     return false;
 }
 
-bool incrementSerial(Column col){
+bool incrementSerial(Column col){//Função que incrementa o valor Serial da coluna no columns.data
 
-    vector<Column> cols = getAllColumns(-1);
-    for (int c = 0; c < cols.size(); c++) {
+    vector<Column> cols = getAllColumns(-1);//Requisita todas as colunas
+    for (int c = 0; c < cols.size(); c++){//Percorre o vector de colunas
 
-        if ((col.getName().compare(cols.at(c).getName())==0) && (col.gettableId() == cols.at(c).gettableId())) {
-            int serial = cols.at(c).getSerial();
-            if (serial>-1) {
+        if ((col.getName().compare(cols.at(c).getName())==0) && (col.gettableId() == cols.at(c).gettableId())){//Verifica se é a coluna desejada e se é a mesma tabela
+            int serial = cols.at(c).getSerial();//Pega o valor serial da coluna
+            if (serial>-1){//Se ele é maior que -1 então soma 1 e atualiza o valor
                 serial++;
                 cols.at(c).setSerial(serial);
-
                 ofstream fileColumn;
-                fileColumn.open(columnsPath);
-
+                fileColumn.open(columnsPath);//Abre o arquivo columns.data e atualiza ele
                 for (int x = 0; x < cols.size(); x++) {
                     fileColumn << cols.at(x).getPk() << separator << cols.at(x).getSerial() << separator << cols.at(x).getName() << separator << cols.at(x).getType() << separator << cols.at(x).getSize() << separator << cols.at(x).getOptional() << separator << cols.at(x).getFk() << separator << cols.at(x).gettableId() << "\n" ;
                 }
-
                 fileColumn.close();
-
                 return true;
-
             }else{
+                if(log){cout<<"Coluna não é serial. Não pode ser incrementada"<<endl;}
                 return false;
             }
-            return true;
         }
     }
+    if(log){cout<<"Saiu do for que percorre as colunas.Nada referent foi encontrado."<<endl;}
     return false;
 }
 
-vector<string> getColFromTable(string tablePath, int tableIndex){
+vector<string> getColFromTable(string tablePath, int tableIndex){//função que retorna uma coluna de um arquivo baseado no índice do explode
     vector <string> selectCols;
-
     string line;
-    ifstream file (tablePath.c_str());
-    if (file.is_open()){
-        while ( file.good() ){
+    ifstream file (tablePath.c_str());//Abre o arquivo requisitado
+    if (file.is_open()){//Se o arquivo conseguir ser aberto
+        while (file.good()){
             getline (file,line);
-            if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
+            if(line != "\0"){//Se a linha não for vazia
                 vector <string> lines;
                 lines = explode(line, separator);
                 selectCols.push_back(lines.at(tableIndex));
             }
         }
-
-        file.close();
-
-
+        file.close();//Fecha o arquivo
+        return selectCols;
+    }else{
+    if(log){cout<<"Arquivo "<<tablePath<<" nao pode ser aberto."<<endl;}
+    return selectCols;//Retorna um vector de string, se nada foi encontrado ele é retornado vazio
     }
-    return selectCols;
 }
 
-bool returnWhere(vector<string>tuple ,vector<Condition> where, vector<Column> columns){
+bool returnWhere(vector<string>tuple ,vector<Condition> where, vector<Column> columns){//Recebe um vector de Conditionm, de Columns e uma Tupla e verifica se a validação procede ou não
     bool validation = true;
-    for (int t = 0; t<tuple.size(); t++) {
-        for (int w = 0; w<where.size(); w++) {
-            if (columns.at(t).getName().compare(where.at(w).getColName())==0) {
-                if (where.at(w).getOperatorType().compare("<")==0) {
-                    if (tuple.at(t).compare(where.at(w).getValue())<0) {
+    for(int t = 0; t<tuple.size(); t++){//Percorre o vector de tuplas(strings)
+        for(int w = 0; w<where.size(); w++){//Percorre o vector de Condition
+            if(columns.at(t).getName().compare(where.at(w).getColName())==0){//Compara se a Coluna do vector de columns é a mesma requerida na condição
+                //Aqui verifica qual a condição que foi requisitada, faz a verificação e seta o bool de validade
+                if(where.at(w).getOperatorType().compare("<")==0){
+                    if(tuple.at(t).compare(where.at(w).getValue())<0){
                         validation = true;
                     }else{
                         validation = false;
@@ -1262,153 +1252,130 @@ bool returnWhere(vector<string>tuple ,vector<Condition> where, vector<Column> co
                 }
             }
         }
-    }
-    if (validation) {
-        return true;
-    }else{
-        return false;
-    }
+    }//Retorna o resultado da validação
+    return validation;
 }
 
-vector<vector<string> > select(vector<string> parameters, string tableName, vector<Condition> where){
+vector<vector<string> > select(vector<string> parameters, string tableName, vector<Condition> where){//Função que seleciona tuplas de um arquivo baseado na condição e retorna um Vector de vector de strings
     vector <vector<string> > select;
-
-    vector<Table> tables = getAllTables();
-    for (int t = 0; t < getAllTables().size(); t++) {
-        if (tables.at(t).getName().compare(tableName)==0) {
-            if (tables.at(t).getDatabase()==getDefaultDb().getId()) {
+    vector<Table> tables = getAllTables();//Requisita todas as tabelas existentes
+    for(int t = 0; t < getAllTables().size(); t++){//Percorre as tabelas existentes
+        if(tables.at(t).getName().compare(tableName)==0){//Verifica se a tabela percorrida é a mesma requisitada
+            if(tables.at(t).getDatabase()==getDefaultDb().getId()){//Verifica se o banco de dados que foi requisitado é o banco que está setado
                 int tableId = tables.at(t).getId();
-                vector<Column> columns = getAllColumns(tableId);
+                vector<Column> columns = getAllColumns(tableId);//Faz uma requisição por todas as colunas da tabela
 
                 Table selectTable = tables.at(t);
-                string tablepath = getPathFromDatabase(getDefaultDb().getId()) + "/" + selectTable.getName() + ".data";
-
-                string line;
-                ifstream file (tablepath.c_str());
-
-                if (parameters.size()==1 && (parameters.at(0).compare("*")==0)) {
+                string tablepath = getPathFromDatabase(getDefaultDb().getId()) + "/" + selectTable.getName() + ".data";//Monta o caminho para o arquivo da tabela
+                //string line;
+                //ifstream file (tablepath.c_str());//Abre o arquivo da tabela
+                if (parameters.size()==1 && (parameters.at(0).compare("*")==0)) {//Se o parâmetro passado foi '*' então retorna todas das colunas
                     string line;
-                    ifstream file (tablepath.c_str());
-                    if (file.is_open()){
-                        while ( file.good() ){
-                            getline (file,line);
-                            if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
+                    ifstream file (tablepath.c_str());//Abre o arquivo da tabela
+                    if (file.is_open()){//Se o arquivo foi aberto
+                        while ( file.good() ){//Enquanto puder percorrer
+                            getline (file,line);//Pega a linha do arquivo
+                            if(line != "\0"){//Se a linha não for vazia
                                 vector <string> tuple;
                                 tuple = explode(line, separator);
-
-                                if (returnWhere(tuple, where, columns)) {
+                                if (returnWhere(tuple, where, columns)){//Manda para a função que chega de valida a condição, se validar, adiciona a tupla para o vetor de retorno
                                     select.push_back(tuple);
                                 }
-
                             }
                         }
-                        file.close();
+                        file.close();//Fecha o arquivo da tabela
                     }
                     return select;
                 }else{
                     vector <vector<string> > returnSelect;
-
                     string line;
-                    ifstream file (tablepath.c_str());
-                    if (file.is_open()){
-                        while ( file.good() ){
-                            getline (file,line);
-                            int lineCount = 0;
-                            if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
+                    ifstream file (tablepath.c_str());//Abre o arquivo da tabela
+                    if (file.is_open()){//Se o arquivo foi aberto
+                        while ( file.good() ){//Enquanto puder ler o arquivo
+                            getline (file,line);//Lê a linha do arquivo
+                            if(line != "\0"){//Se a linha não for vazia
                                 vector <string> tuple;
                                 tuple = explode(line, separator);
-                                select.push_back(tuple);
+                                select.push_back(tuple);//Vai colocando as tuplas da tabela em um vector
                                 vector<string> result;
-
-                                if (returnWhere(tuple, where, columns)) {
-
-                                    for (int h = 0; h<parameters.size(); h++) {
-                                        for (int g = 0; g<columns.size(); g++) {
-                                            if (parameters.at(h).compare(columns.at(g).getName())==0) {
-                                                //cout << "coluna " << columns.at(g).getName() << "[]" << parameters.at(h) << endl;
+                                if (returnWhere(tuple, where, columns)){//Se o valor da coluna e o valor da tupla validar através da condição, entao grava a tupla no vector de retorno
+                                    for(int h = 0; h<parameters.size(); h++){//Percorre o vector recebido das colunas desejadas de retorno
+                                        for(int g = 0; g<columns.size(); g++){//Percorre o vector de column
+                                            if (parameters.at(h).compare(columns.at(g).getName())==0){//Verifica qual coluna foi requisitada, o valor respectivo ao índice da coluna no vector de column é usada para selecionar o índice da coluna da tupla
                                                 result.push_back(tuple.at(g));
                                                 break;
                                             }
                                         }
-
-
                                     }
-
-                                    returnSelect.push_back(result);
-
+                                    returnSelect.push_back(result);//Coloca o resultado no vector de vector de retorno para cada condição validada
                                 }
                             }
-                            lineCount++;
                         }
-                        file.close();
+                        file.close();//Fecha arquivo
                     }
-                    return returnSelect;
+                    return returnSelect;//Retorna o vector de vector de string quando são escolhidas colunas
                 }
             }
         }
     }
-    return select;
+    return select;//Retorna o vector de vector quando é passado o parâmetro "*"
 }
 
-bool validateValue(vector<Column> columns,vector<string> *values,string tableName){
+bool validateValue(vector<Column> columns,vector<string> *values,string tableName){//Função que verifica se um valor, recebido como parâmetro, valida conforme as condições da coluna que ele pertence
     bool validation= false;
-    vector <int> serialId;
-    for (int c = 0; c < columns.size(); c++) {
-        //COMEÇA VALIDAÇÃO DO CAMPO
-        if (columns.at(c).getOptional() && (values->at(c).compare("NULL")==0) && !columns.at(c).getPk()){// se campo é opcional e nulo e não é primary key
-
+    vector <int> serialId;//Cria um vector de inteiros com o ID dos atributos seriais, para fazer uso da função incrementSerial();
+    for(int c = 0; c < columns.size(); c++){//Percorre o vector de Columns recebido
+        //Começa a validação dos campos
+        if (columns.at(c).getOptional() && (values->at(c).compare("NULL")==0) && !columns.at(c).getPk()){// Se a coluna é opcional e não é primary key e o valor passado foi NULL, então é válido
+            validation = true;
         }else{
-            if (columns.at(c).getSerial()>-1) {
-                values->at(c) = intToString(columns.at(c).getSerial());
-                serialId.push_back(c);
-            }else{
-                if(!checkType(values->at(c), columns.at(c).getType())){
+            if (columns.at(c).getSerial()>-1) {//Se o serial da coluna for maior que -1 então ela é serial
+                values->at(c) = intToString(columns.at(c).getSerial());//Atualiza o valor passado como parâmetro com o novo valor serial
+                serialId.push_back(c);//Guarda o id da coluna que é serial
+            }else{//Se a coluna não for serial, checa o tipo e o tamanho
+                if(!checkType(values->at(c), columns.at(c).getType())){//Verifica se o tipo passado como parâmetro é valido para a coluna referente
                     validation = false;
                     if(log){cout << "Não foi possivel inserir na coluna " << columns.at(c).getName() << ". Valor informado não é valido."<< endl;};
                     return false;
                 }
-
-                if(values->at(c).length()>columns.at(c).getSize()){
+                if(values->at(c).length()>columns.at(c).getSize()){//Se o tamanho do valor passado for maior que o tamanho permitido da coluna, não valida
                     validation = false;
                     if(log){cout << "Não foi possivel inserir na coluna " << columns.at(c).getName() << ". Tamanho do valor inserido inválido."<< endl;};
                     return false;
                 }
             }
 
-        }
-
-        if (columns.at(c).getPk()) {
+        if (columns.at(c).getPk()) {//Se a coluna for primary
             vector<string> parametros;
-            parametros.push_back(columns.at(c).getName());
+            parametros.push_back(columns.at(c).getName());//Pega o nome da coluna que é primary
             vector<Condition> where;
 
-            vector<vector<string> > selectResult = select(parametros, tableName, where);
-            for (int tuple = 0 ; tuple<selectResult.size(); tuple++) {
-                for (int col = 0; col<selectResult.at(tuple).size(); col++) {
-                    if(selectResult.at(tuple).at(col).compare(values->at(c))==0) {
-                        cout <<"aki no for das pk"<<endl;
+            vector<vector<string> > selectResult = select(parametros, tableName, where);//Retorna a coluna inteira da tabela
+            for (int tuple = 0 ; tuple<selectResult.size(); tuple++) {//Percorre todos as tuplas retornadas
+                for (int col = 0; col<selectResult.at(tuple).size(); col++) {//Percorre as colunas de cada tupla
+                    if(selectResult.at(tuple).at(col).compare(values->at(c))==0) {//Verifica se o valor passado como parâmetro já existe na coluna
+                        if(log){cout <<"Valor de primary key ja existente"<<endl;}
                         return false;
                     }
                 }
             }
         }
 
-        if (columns.at(c).getFk()!=-1) {
-            vector<Foreing> fks = getAllFks();
-            for (int f = 0; f<fks.size(); f++) {
-                if (fks.at(f).getId()==columns.at(c).getFk()) {
-                    vector<Primary> pks= getAllPrimary(fks.at(f).getFk());
-                    if (pks.size()>0) {
+        if (columns.at(c).getFk()!=-1) {//Se a coluna for FK
+            vector<Foreing> fks = getAllFks();//Requisita todas as FK's
+            for(int f = 0; f<fks.size(); f++){//Percorre o vector de foreign keys recebido
+                if (fks.at(f).getId()==columns.at(c).getFk()) {//Verifica se o ID do ocorrência da FK é o mesmo que a coluna aponta
+                    vector<Primary> pks= getAllPrimary(fks.at(f).getFk());//Retorna as primary keys da tabela apontada
+                    if (pks.size()>0) {//Se o tamanho retornado for maior que 0
                         string nomeCampo = pks.at(0).getName();
                         string nomeTabela = pks.at(0).getTable();
                         vector<string> parametrospk;
                         vector<Condition> where;
                         parametrospk.push_back(nomeCampo);
 
-
                         vector<vector<string> > selectResult = select(parametrospk, nomeTabela, where);
-                        cout << "tamanho: " << selectResult.size() << endl;
                         if (selectResult.size()==0) {
+                            if(log){cout<<"Nenhuma primary key encontrada"<<endl;}
                             return false;
                         }else{
 
@@ -1419,135 +1386,90 @@ bool validateValue(vector<Column> columns,vector<string> *values,string tableNam
                                 cout << "lendo " << selectResult.at(tuple).at(0) << endl;
                                 if(selectResult.at(tuple).at(0).compare(values->at(c))==0) {
                                     validationfk = true;
-                                    cout << "encontrou " << selectResult.at(tuple).at(0) << endl;
                                     break;
                                 }
-                                cout << "naoc" << endl;
                                 //}
                                 if(validationfk){
                                     cout << "aqui validationfk " << validationfk << endl;
                                     validation = true;
                                     break;
-
                                 }
-
-                                cout << "1 Primary key ainda não encontrada" << endl;
                             }
                         }
                     }else{
-                        cout << "nao há fk com aquele id" << endl;
+                        if(log){cout << "Primary key "<<fks.at(f).getFk()<<" nao é valida;" << endl;}
+                        return false;
                     }
                 }
             }
-
         }else{
             if(!validation)
                 validation = true;
         }
+      }
     }
-    cout << "antes do if" << endl;
-    if(validation){
-
+    if(validation){//Se saiu do for com o booleano setado pra TRUE, então tudo ocorreu certo e as colunas seriais recebem seu novo futuro valor no arquivo columns.data
+        if(log){cout<<"Validacao de valores ocorreu com sucesso."<<endl;}
         for(int i=0;i<serialId.size();i++){
             incrementSerial(columns.at(serialId.at(i)));
         }
         return true;
     }else{
+        if(log){cout<<"Nao foi possivel validar os valores recebidos."<<endl;}
         return false;
     }
 }
 
-
-
-bool insert(vector<string> values, string tableName){
-    vector<Table> tables = getAllTables();
-    for (int t = 0; t < getAllTables().size(); t++) {
-        if (tables.at(t).getName().compare(tableName)==0) {
-            if (tables.at(t).getDatabase()==getDefaultDb().getId()) {
+bool insertTable(vector<string> values, string tableName){//Função que insere em uma tabela
+    vector<Table> tables = getAllTables();//Requisita todas as tabelas existentes
+    for (int t = 0; t < getAllTables().size(); t++){//Percorre o vector de tables recebido
+        if (tables.at(t).getName().compare(tableName)==0) {//Se a tabela recebida é igual a tabela requisitada, então existe
+            if (tables.at(t).getDatabase()==getDefaultDb().getId()) {//Se a tabela requisitada faz parte do banco que está setado como padrão então continua
                 int tableId = tables.at(t).getId();
-                vector<Column> columns = getAllColumns(tableId);
-                if (columns.size()==values.size()) {
-                    Table insertTable = tables.at(t);
-                    string tablepath = getPathFromDatabase(getDefaultDb().getId()) + "/" + insertTable.getName() + ".data";
+                vector<Column> columns = getAllColumns(tableId);//Requisita todas as colunas da tabela
 
+                if (columns.size()==values.size()) {//Se a quantidade de colunas é igual a quantidade de parametros recebidos
+                    Table insertT = tables.at(t);//Usa o objeto inserT para referencias a tabela desejada no insert
+                    string tablepath = getPathFromDatabase(getDefaultDb().getId()) + "/" + insertT.getName() + ".data";//Configura o caminho da tabela
 
-                    bool validation;// = true;
-                    ///for (int c = 0; c < columns.size(); c++) {
-
-                    //COMEÇA VALIDAÇÃO DO CAMPO
-                    validation = validateValue(columns,&values,tableName);
-
-                    //FIM VALIDAÇÃO CAMPOS
-                    ///}
-                    if (validation) {
+                    bool validation;
+                    validation = validateValue(columns,&values,tableName);//Envia para a função de validação de valores
+                    if (validation){//Se a validação foi bem sucedida então grava no arquivo.
+                        if(log){cout<<"Validacao efetudada com sucesso, gravando dados na tabela..."<<endl;}
                         ofstream fileColumn;
-                        fileColumn.open(tablepath.c_str(), std::ofstream::app);
-                        for (int x = 0; x < values.size(); x++) {
-                            fileColumn << values.at(x);
+                        fileColumn.open(tablepath.c_str(), std::ofstream::app);//Abre o arquivo da tabela e insere no final dele
+                        for (int x = 0; x < values.size(); x++){//Insere a nova tupla validada
+                            fileColumn << values.at(x);//Grava o valor da coluna
                             if (x!=values.size()-1) {
-                                fileColumn << separator;
+                                fileColumn << separator;//Vai colocando o separador até chegar a ultima coluna
                             }
                         }
-                        fileColumn << "\n";
-                        fileColumn.close();
+                        fileColumn << "\n";//Encerra a linha
+                        fileColumn.close();//Fecha o arquivo
                     }else{
-                        cout << ">>>false" << endl;
+                        if(log){cout << "Insercao nao conseguiu passar pela validacao dos valores." << endl;}
                         return false;
                     }
-
-                    //cout << "increment " << columns.at(0).getName() << endl;
-
-
-                    //incrementSerial(columns.at(0));
-
-
-                    /*
-
-                     string line;
-                     ifstream file (fksPath);
-                     if (file.is_open()){
-                     while ( file.good() ){
-                     getline (file,line);
-                     if(line != "\0"){//SE A LINHA FOR VAZIA ENT√O N√O FAZ ISSO, APARENTEMENTE TAVA DNADO ERRO PQ PEGAVA LIXO
-                     vector <string> pkline;
-                     pkline = explode(line, separator);
-
-                     int id = atoi(pkline.at(0).c_str());//CONVERTE STRING PARA INTEIRO
-                     int fk = atoi(pkline.at(1).c_str());//CONVERTE STRING PARA INTEIRO
-
-                     Foreing newforeing(id, fk);
-                     fks.push_back(newforeing);
-                     }
-                     }
-
-                     file.close();
-
-
-                     */
-
-                    // cout << tablepath;
                     return true;
-
                 }else{
-                    cout << "numero de colunas não corresponde ao numero de colunas da tabela" << endl;
+                    if(log){cout << "Numero de colunas inseridas nao corresponde ao numero de colunas da tabela" << endl;}
                     return false;
                 }
             }
-            return true;
+            if(log){cout<<"Tabela nao pertence ao banco padrao."<<endl;}
+            return false;
         }
     }
-    cout << "tabela nao encontrada";
+    if(log){cout << "Todas tabelas perocorridas. Tabela nao encontrada"<<endl;}
     return false;
 }
 
-
-bool deleteItem(string fileName,string itemName){
+bool deleteItem(string fileName,string itemName){//Função responsável por deletar uma tablespace, database ou tabela
     if(fileName.compare("tablespace")==0){//Se for tablespace
         if(log){cout <<"Escolheu deletar tablespace"<<endl;}
         vector <Tablespace> tsReaded = getAllTableSpace();//Pega todas tablespace
         for(int i=0;i<tsReaded.size();i++){//Percorre as tablespaces recebidas
             if(itemName.compare(tsReaded.at(i).getName())==0){//Verifica se a tablespace existe
-                if(log){cout<<"Tablespace encontrada"<<endl;}
                 vector <string> valuesDatabase = getColFromTable(dbpath,2);//Retorna os ID das tablespace do arquivo dpath
                 for(int i2=0;i2<valuesDatabase.size();i2++){//Percorre o valor retornado
                     string tsID = intToString(tsReaded.at(i).getId());
@@ -1580,7 +1502,6 @@ bool deleteItem(string fileName,string itemName){
         vector<Database> dbReaded = getAllDatabase();//Recebe todos os itens do database.data
         for(int i=0;i<dbReaded.size();i++){//Percorre o vector de database recebido
             if(itemName.compare(dbReaded.at(i).getName())==0){//Verifica se o nome passado como parametro existe
-                if(log){cout<<"Banco de dados encontrado."<<endl;}
                 vector <string> tableReaded = getColFromTable(tablesPath,2);//Recebe a coluna dos ID's dos bancos que as tabelas pertecem
                 for(int i2=0;i2<tableReaded.size();i2++){//Percorre o vector recebido
                     string dbID = intToString(dbReaded.at(i).getId());//Converte o ID do Banco referente para string
@@ -1588,7 +1509,6 @@ bool deleteItem(string fileName,string itemName){
                         if(log){cout<<"Banco de dados possui tabelas vinculadas a ele. Impossivel deletar."<<endl;}
                         return false;
                     }
-
                 }
                 if (log){cout<<"Nao encontradas tabelas vinculado ao banco de dados. Possivel deletar."<<endl;}
                 string dbFolder = getPathFromDatabase(dbReaded.at(i).getId());//Pega o caminho do database
@@ -1605,7 +1525,6 @@ bool deleteItem(string fileName,string itemName){
                 file.close();//Fecha o arquivo
                 return true;
             }
-
         }
         if(log){cout<<"Banco de dados nao encontrado"<<endl;}
         return false;
@@ -1615,7 +1534,6 @@ bool deleteItem(string fileName,string itemName){
         vector<Table> tableReaded = getAllTables();//Recebe todas as tabelas que existem no tables.data
         for(int i=0;i<tableReaded.size();i++){//Percorre as tabelas recebidas
             if(itemName.compare(tableReaded.at(i).getName())==0){//Verifica se a tabela existe no tables.data
-                if(log){cout<<"Tabela existe"<<endl;}
                 string tablePath = getPathFromDatabase(tableReaded.at(i).getDatabase()) + "/" + itemName + ".data";
                 vector<string> tableData = getColFromTable(tablePath,0);
                 if(tableData.size()==0){
@@ -1629,7 +1547,6 @@ bool deleteItem(string fileName,string itemName){
                             file << tableReaded.at(x).getId() << separator << tableReaded.at(x).getName() << separator << tableReaded.at(x).getDatabase() << "\n" ;
                         }
                     }
-
                     file.close();//Fecha o arquivo tables.data
                     vector<Column> colReaded = getAllColumns(-1);
                     file.open(columnsPath);//Abre o arquivo column.data para gravação
@@ -1638,10 +1555,8 @@ bool deleteItem(string fileName,string itemName){
 
                         }else{//Senão, grava no arquivo
                             file << colReaded.at(x).getPk() << separator << colReaded.at(x).getSerial() << separator << colReaded.at(x).getName() << separator << colReaded.at(x).getType() << separator << colReaded.at(x).getSize() << separator << colReaded.at(x).getOptional() << separator << colReaded.at(x).getFk() << separator << colReaded.at(x).gettableId() << "\n" ;
-
                         }
                     }
-
                     file.close();//Fecha o arquivo column.data
                     remove(tablePath.c_str());
                     return true;
@@ -1649,10 +1564,187 @@ bool deleteItem(string fileName,string itemName){
                 if(log){cout<<"Tabela populada. Impossivel deletar."<<endl;}
                 return false;
             }
-
         }
         if(log){cout<<"Tabela nao encontrada."<<endl;}
         return false;
     }
-
 }
+
+bool updateTable(string colName, string tableName, vector<Condition> where, string value){//Função que efetua o update em uma tabela
+
+    vector < string > updateResult;
+
+    vector<Table> tables = getAllTables();
+    bool findedTable = false;
+    for (int t = 0; t < getAllTables().size(); t++) {
+        if (tables.at(t).getName().compare(tableName)==0) {
+            if (tables.at(t).getDatabase()==getDefaultDb().getId()) {
+                findedTable = true;
+                int tableId = tables.at(t).getId();
+                vector<Column> columns = getAllColumns(tableId);
+
+                Table updateTable = tables.at(t);
+                string tablepath = getPathFromDatabase(getDefaultDb().getId()) + "/" + updateTable.getName() + ".data";
+
+                string line;
+                ifstream file (tablepath.c_str());
+
+                if (file.is_open()){
+                    while ( file.good() ){
+                        getline (file,line);
+                        if(line != "\0"){
+                            vector <string> tuple;
+                            tuple = explode(line, separator);
+
+                            if (returnWhere(tuple, where, columns)) {
+
+                                bool findedColumn = false;
+                                for (int cls = 0; cls<columns.size(); cls++) {
+                                    if (columns.at(cls).getName().compare(colName)==0) {
+                                        tuple.at(cls) = value;
+                                        findedColumn = true;
+                                    }
+                                    cout << tuple.at(cls) << "  -- ";
+                                }
+
+                                if (!findedColumn) {
+                                    if(log) {cout << "Não foi encontrada uma coluna para esta tabela." << endl; }
+                                    return false;
+                                }
+
+                                if (columns.size()!=tuple.size() || !validateValue(columns,&tuple,tableName) ) {
+                                    cout << "TAMANHO " << columns.size() << " -- " << tuple.size() << endl;
+                                    if (log) { cout << "Não foi possível validar o valor à ser atualizado para a coluna desejada" << endl; }
+                                    return false;
+                                }
+                            }
+
+                            string updateTuple;
+                            for (int x = 0; x < tuple.size(); x++) {
+                                updateTuple = updateTuple + tuple.at(x);
+                                if (x!=tuple.size()-1) {
+                                    updateTuple = updateTuple + separator;
+                                }
+                            }
+                            updateTuple = updateTuple + "\n";
+                            updateResult.push_back(updateTuple);
+
+                        }
+                    }
+
+                }
+                file.close();
+
+                fstream updateFile (tablepath.c_str());
+                if (updateFile.is_open()){
+                        for (int h = 0; h < updateResult.size(); h++) {
+                            updateFile << updateResult.at(h);
+                        }
+
+                }
+                updateFile.close();
+                return true;
+            }
+            break;
+        }
+
+    }
+
+    if (!findedTable) {
+        if (log) {cout << "Tabela não encontrada" << endl;}
+    }else{
+        return false;
+    }
+    return false;
+}
+
+bool deleteFromTable(string tableName, vector<Condition> where){
+
+    vector < string > updateResult;
+
+    vector<Table> tables = getAllTables();
+    bool findedTable = false;
+    for (int t = 0; t < getAllTables().size(); t++) {
+        if (tables.at(t).getName().compare(tableName)==0) {
+            if (tables.at(t).getDatabase()==getDefaultDb().getId()) {
+                findedTable = true;
+                int tableId = tables.at(t).getId();
+                vector<Column> columns = getAllColumns(tableId);
+
+                Table updateTable = tables.at(t);
+                string tablepath = getPathFromDatabase(getDefaultDb().getId()) + "/" + updateTable.getName() + ".data";
+
+                string line;
+                ifstream file (tablepath.c_str());
+
+                if (file.is_open()){
+                    while ( file.good() ){
+                        getline (file,line);
+                        if(line != "\0"){
+                            vector <string> tuple;
+                            tuple = explode(line, separator);
+
+                            string updateTuple;
+                            for (int x = 0; x < tuple.size(); x++) {
+                                updateTuple = updateTuple + tuple.at(x);
+                                if (x!=tuple.size()-1) {
+                                    updateTuple = updateTuple + separator;
+                                }
+                            }
+                            if (!returnWhere(tuple, where, columns)) {
+                                updateResult.push_back(updateTuple);
+                            }
+                        }
+                    }
+                }
+                file.close();
+
+                ofstream updateFile (tablepath.c_str());
+                if (updateFile.is_open()){
+                    for (int h = 0; h < updateResult.size(); h++) {
+                        updateFile << updateResult.at(h) << "\n";
+                    }
+                }
+                updateFile.close();
+                return true;
+            }
+            break;
+        }
+
+    }
+
+    if (!findedTable) {
+        if (log) {cout << "Tabela não encontrada" << endl;}
+    }else{
+        return false;
+    }
+    return false;
+}
+
+bool setDefaultDb(Database defaultDb){
+    if(fileExists(dbpath)){
+        vector <Database> dbs;
+        dbs = getAllDatabase();
+        for (int x = 0; x<dbs.size(); x++){
+            bool updateOld = false;
+            bool updateNew = false;
+            if(dbs.at(x).getDefault()){
+                dbs.at(x).setDefault(false);
+                updateOld = true;
+            }else if (dbs.at(x).getId()==defaultDb.getId()){
+                dbs.at(x).setDefault(true);
+                updateNew = true;
+            }
+        }
+        ofstream file;
+        file.open(dbpath);
+        for (int x = 0; x<dbs.size(); x++){//Grava no arquivo
+    		file << dbs.at(x).getId() << separator << dbs.at(x).getName() << separator << dbs.at(x).getTablespace()  << separator << dbs.at(x).getDefault() << "\n";
+        }
+        file.close();
+    }
+
+    return false;
+}
+
+

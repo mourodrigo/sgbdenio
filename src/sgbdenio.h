@@ -26,7 +26,7 @@
  #define MKDIR(a) mkdir(a, 0777)  //Aqui o 0777 define o modo como igual ao umask, ou seja as permissões que resultariam de um mkdir na shell
  #endif
  //#include "sgbdenio.cpp"
- 
+
  #define tsdefault getCurrentPath() + "/ts_default"
  #define tspath "tablespace.data"
  #define dbpath "database.data"
@@ -34,13 +34,13 @@
  #define tablesPath "tables.data"
  #define pksPath "pks.data"
  #define fksPath "fks.data"
- 
+
  #define separator "|>#<|"
- 
+
  #ifndef sgbdenio_sgbdenio_h
  #define sgbdenio_sgbdenio_h
  #endif
- 
+
  #define log 1 // se for 1 imprime mensagens de debug
  */
 #include "sgbdenio.cpp"
@@ -81,7 +81,7 @@ vector<Foreing> getAllFks(); //retorna todas as primary keys
 
 bool setForeingKey(Column col, int pk); //alter table que seta a foreing key, (coluna da foreing key, ID da primary key)
 
-bool insert(vector<string> values, string tableName); // insert table
+bool insertTable(vector<string> values, string tableName); // insert table
 
 int checkDigit(string palavra);
 
@@ -90,3 +90,9 @@ bool checkType(string palavra,int type);
 vector<vector<string> > select(vector<string> parameters, string tableName, vector<string> where);
 
 bool deleteItem(string fileName,string itemName);
+
+bool updateTable(string colName, string tableName, vector<Condition> where, string value);
+
+bool deleteFromTable(string tableName, vector<Condition> where);
+
+bool setDefaultDb(Database defaultDb);
