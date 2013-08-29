@@ -40,7 +40,7 @@
 #define sgbdenio_sgbdenio_h
 #endif
 
-#define log 1 // se for 1 imprime mensagens de debug
+#define log 0 // se for 1 imprime mensagens de debug
 
 using namespace std;
 
@@ -1645,7 +1645,7 @@ bool updateTable(string colName, string tableName, vector<Condition> where, stri
                                     return false;
                                 }
 
-                                if (columns.size()!=tuple.size() || !validateValue(columns,&tuple,tableName, false) ) {//Se o valor recebido não for válido
+                                if (columns.size()!=tuple.size() && validateValue(columns,&tuple,tableName, false)==false ) {//Se o valor recebido não for válido
                                     if(log){cout << "TAMANHO " << columns.size() << " -- " << tuple.size() << endl;}
                                     if (log) { cout << "Não foi possível validar o valor à ser atualizado para a coluna desejada" << endl; }
                                     return false;
@@ -1667,7 +1667,7 @@ bool updateTable(string colName, string tableName, vector<Condition> where, stri
 
                 }
                 file.close();//Fecha o arquivo
-
+                if(updateResult.size()!=0){
                 fstream updateFile (tablepath.c_str());//Abre o arquivo da tabela para gravação
                 if (updateFile.is_open()){//Se o arquivo conseguir ser aberto
                     for (int h = 0; h < updateResult.size(); h++) {//Grava todos os dados no arquivo
@@ -1677,6 +1677,7 @@ bool updateTable(string colName, string tableName, vector<Condition> where, stri
                 }
                 updateFile.close();//Fecha o arquivo
                 return true;
+                }
             }
             break;
         }
@@ -1732,6 +1733,7 @@ bool deleteFromTable(string tableName, vector<Condition> where){//Função que d
                 }
                 file.close();
 
+                if(updateResult.size()!=0){
                 ofstream updateFile (tablepath.c_str());//Abre o arquivo da tabela para gravação
                 if (updateFile.is_open()){//Se o arquivo estiver aberto
                     for (int h = 0; h < updateResult.size(); h++) {//Vai gravando as tuplas novamente na tabela
@@ -1740,6 +1742,7 @@ bool deleteFromTable(string tableName, vector<Condition> where){//Função que d
                 }
                 updateFile.close();//Fecha o arquivo
                 return true;
+                }
             }
             break;
         }

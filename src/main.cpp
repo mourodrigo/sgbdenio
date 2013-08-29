@@ -12,7 +12,7 @@
 
 int main() {
 
-
+/*
 
      // ======= TABLESPACE =======
 
@@ -274,7 +274,7 @@ int main() {
 
     insertTable(valuesl6, "locacao");
 
-
+    */
     /*
 
     //=============SELECT============
@@ -409,10 +409,10 @@ int main() {
         */
 
         //===========UPDATE===============
-        //vector <Condition> where;
-        //where.push_back(Condition("valor", ">", "02.00"));
+        vector <Condition> where;
+        where.push_back(Condition("valor", ">", "03.20"));
 
-        //updateTable("valor","locacao",where,"05.00");
+        updateTable("valor","locacao",where,"04.20");
 
         //vector <Condition> where2;
         //where.push_back(Condition("cpfCliente", "=", "239487132"));

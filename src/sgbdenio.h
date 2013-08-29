@@ -5,44 +5,7 @@
 //  Created by Rodrigo on 13/08/13.
 //  Copyright (c) 2013 uffs. All rights reserved.
 //
-/*
- #include <stdlib.h>
- #include <iostream>
- #include <string>
- #include <fstream>
- #include <ostream>
- #include <vector>
- #include <sstream>
- #include <utility>
- #include <dirent.h>
- #include <limits.h>
- #include <unistd.h>
- #include <stdio.h>
- #ifdef WIN32 || _WIN32
- #include <direct.h>
- #define MKDIR(a) _mkdir(a)
- #else
- #include <sys/stat.h>
- #define MKDIR(a) mkdir(a, 0777)  //Aqui o 0777 define o modo como igual ao umask, ou seja as permissões que resultariam de um mkdir na shell
- #endif
- //#include "sgbdenio.cpp"
- 
- #define tsdefault getCurrentPath() + "/ts_default"
- #define tspath "tablespace.data"
- #define dbpath "database.data"
- #define columnsPath "columns.data"
- #define tablesPath "tables.data"
- #define pksPath "pks.data"
- #define fksPath "fks.data"
- 
- #define separator "|>#<|"
- 
- #ifndef sgbdenio_sgbdenio_h
- #define sgbdenio_sgbdenio_h
- #endif
- 
- #define log 1 // se for 1 imprime mensagens de debug
- */
+
 #include "sgbdenio.cpp"
 
 vector<string> explode( const string& s, const string& delimiter ); //converte uma string para um vetor separando por um delimitador
@@ -83,18 +46,18 @@ bool setForeingKey(Column col, int pk); //alter table que seta a foreing key, (c
 
 bool insertTable(vector<string> values, string tableName); // insert table
 
-int checkDigit(string palavra);
+int checkDigit(string palavra);//função que verifia se é inteiro ou floar
 
-bool checkType(string palavra,int type);
+bool checkType(string palavra,int type);//função que verifia os tipos
 
-vector<vector<string> > select(vector<string> parameters, string tableName, vector<string> where);
+vector<vector<string> > select(vector<string> parameters, string tableName, vector<string> where);//função que faz select em uma tabela, efetua update no parameters da tableName conforme o where
 
-bool deleteItem(string fileName,string itemName);
+bool deleteItem(string fileName,string itemName);//função que deleta uma tablespace, tabela ou banco de dados
 
-bool updateTable(string colName, string tableName, vector<Condition> where, string value);
+bool updateTable(string colName, string tableName, vector<Condition> where, string value);//função que atualiza uma tabela
 
-bool deleteFromTable(string tableName, vector<Condition> where);
+bool deleteFromTable(string tableName, vector<Condition> where);//função que deleta uam tupla da tabela
 
-bool setDefaultDb(Database defaultDb);
+bool setDefaultDb(Database defaultDb);//função que seta o banco que está sendo trabalhado
 
-bool dropTable(string tableName);
+bool dropTable(string tableName);//função que dropa uma tabela
