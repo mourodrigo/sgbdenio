@@ -1390,8 +1390,15 @@ bool validateValue(vector<Column> columns,vector<string> *values,string tableNam
                     if (fks.at(f).getId()==columns.at(c).getFk()) {//Verifica se o ID do ocorrência da FK é o mesmo que a coluna aponta
                         vector<Primary> pks= getAllPrimary(fks.at(f).getFk());//Retorna as primary keys da tabela apontada
                         if (pks.size()>0) {//Se o tamanho retornado for maior que 0
-                            string nomeCampo = pks.at(0).getName();
-                            string nomeTabela = pks.at(0).getTable();
+                            string nomeCampo;// = pks.at(0).getName();
+                            string nomeTabela;// = pks.at(0).getTable();
+                            for(int uh=0;uh<pks.size();uh++){
+                                if(pks.at(uh).getId() == fks.at(f).getId()){
+                                    nomeCampo = pks.at(uh).getName();
+                                    nomeTabela = pks.at(uh).getTable();
+                                }
+                            }
+
                             vector<string> parametrospk;
                             vector<Condition> where;
                             parametrospk.push_back(nomeCampo);
